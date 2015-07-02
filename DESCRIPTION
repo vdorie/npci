@@ -1,0 +1,13 @@
+Package: npci
+Version: 0.1-0
+Date: 2015-06-27
+Title: Nonparametric Methods for Causal Inference
+Authors@R: c(person("Vincent Dorie", "Developer", role = c("aut", "cre"), email = "vjd4@nyu.edu"))
+Depends: R (>= 3.1-0)
+Imports: stats, mlegp, dbarts
+Description: Implements a variety of non-parametric models targeting various causal estimands.
+License: GPL (>= 2)
+LazyData: no
+NeedsCompilation: no
+URL: https://github.com/vdorie/npci
+BugReports: https://github.com/vdorie/npci/issues

@@ -1,0 +1,13 @@
+export(ci.fit)
+export(ci.estimate)
+
+S3method(predict, naive1)
+S3method(fitted, naive1)
+S3method(predict, naive2)
+S3method(fitted, naive2)
+S3method(predict, bartSampler)
+
+importFrom(stats, quantile, lm, predict, sd, setNames)
+
+importFrom(mlegp, mlegp)
+importFrom(dbarts, dbarts, dbartsControl)

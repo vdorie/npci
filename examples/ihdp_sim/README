@@ -1,0 +1,11 @@
+Runs the incomplete overlap example from Hill 2011, JCGS. Results end up in the "data" folder.
+
+If you have access to a cluster which uses TORQUE, running the following from the command line will split the iterations up, generate, and submit jobs for the simulation:
+  R --no-save < queueJobs.R
+
+If you only have a local machine,
+  R --no-save < runLocally.R
+
+Edit either of those to change the simulations parameters. Otherwise, the simulation itself is in runJob.R.
+
+Finally, results.R can be useful in mashing together the results and loadData.R creates an "x" and "z" for the simulation setting.
