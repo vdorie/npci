@@ -18,6 +18,7 @@ predict.bartSampler <- function(object, x, z, ndpost = 400L, keeptrainfits = TRU
   groupMeans <- object$groupMeans
   
   df <- as.data.frame(x)
+  if (is.null(colnames(x))) colnames(df) <- colnames(sampler$data@x)[-ncol(sampler$data@x)]
   df$z <- rep_len(z, nrow(df))
   
   sampler$setTestPredictor(df)
