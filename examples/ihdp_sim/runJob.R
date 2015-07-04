@@ -14,35 +14,21 @@ numReps <- end - start + 1
 results <- matrix(NA, numReps, 5)
 
 colnames(results) <- 
-  c("te", "cov", "cil", "wrong", "tau.est")
+  c("bias", "cov", "cil", "wrong", "tau.est")
 
 precision <- rep(NA_real_, numReps)
 
-source("loadData.R")
+source("data.R")
 
 x.dgp <- cbind(1, as.matrix(x))
-n <- nrow(x.dgp)
-p <- ncol(x.dgp)
-w <- matrix(c(0, rep(0.5, p - 1)), nrow(x.dgp), ncol(x.dgp), byrow = TRUE)
-
-sigma.y <- 1
+w <- matrix(c(0, rep(0.5, ncol(x.dgp) - 1)), nrow(x.dgp), ncol(x.dgp), byrow = TRUE)
 
 for (i in seq_len(numReps)){ 
   iter <- i + start - 1
   
-  set.seed(565 + iter * 5)
-  
-  beta <- sample(seq(0.0, 0.4, 0.1), p, replace = TRUE,
-                 prob = c(0.6, rep(0.1, 4)))
-  
-  mu.0 <- exp((x.dgp + w) %*% beta)
-  mu.1 <- x.dgp %*% beta
-  omega <- mean(mu.1[z == 0] - mu.0[z == 0]) - 4
-  mu.1 <- mu.1 - omega
-  y.0 <- rnorm(n, mu.0, sigma.y)
-  y.1 <- rnorm(n, mu.1, sigma.y)
-  y <- ifelse(z == 1, y.1, y.0)
-  
+  ## places mu.0, mu.1, y.0, y.1, and y into calling env
+  generateDataForIterInCurrentEnvironment(iter, x.dgp, z, w)
+    
   meanEffects  <- mu.1[z == 0] - mu.0[z == 0]
   results[i, "tau.est"] <- mean(y.1[z == 0] -  y.0[z == 0])
   

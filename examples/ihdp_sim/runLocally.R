@@ -1,19 +1,28 @@
 numReps <- 250L
 
-## this needs to be modified to adapt to work with results files already present
-## from cluster runs
-
 methods <- c("bart", "naive1", "naive2")
 
+baseResultInterval <- matrix(c(1L, totalNumReps), 1L, 2L,
+                             dimnames = list(NULL, c("start", "end")))
+
+source("results.R")
+
 for (method in methods) {
-  resultsFileName <- paste0(method, "_1_", numReps, ".RData")
-  resultsFile <- file.path("data", resultsFileName)
+  existingResults <- getResultIntervals(method)
   
-  if (file.exists(resultsFile)) next
+  resultsIntervals <- intervalSubtraction(baseResultInterval, existingResults)
+  if (nrow(resultsIntervals) == 0) next
   
-  Sys.setenv(START = 1)
-  Sys.setenv(END = numReps)
   Sys.setenv(METHOD = method)
+  
+  for (j in seq_len(nrow(resultsIntervals))) {
+    interval <- resultsIntervals[j,, drop = FALSE]
     
-  source("runJob.R", local = TRUE, keep.source = FALSE)
+    Sys.setenv(START = interval[, "start"])
+    Sys.setenv(END   = interval[, "end"])
+    
+    cat("running method '", method, "' from ", interval[, "start"], " to ", interval[, "end"], "\n", sep = "")
+    
+    source("runJob.R", local = TRUE, keep.source = FALSE)
+  }
 }

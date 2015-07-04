@@ -14,7 +14,7 @@ source("results.R")
 
 for (i in seq_along(methods)) {
   method <- methods[i]
-  ## check for existing results
+  
   existingResults <- getResultIntervals(method)
   
   resultsIntervals <- intervalSubtraction(baseResultInterval, existingResults)
