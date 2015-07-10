@@ -18,10 +18,10 @@ for (method in methods) {
   for (j in seq_len(nrow(resultsIntervals))) {
     interval <- resultsIntervals[j,, drop = FALSE]
     
-    Sys.setenv(START = interval[, "start"])
-    Sys.setenv(END   = interval[, "end"])
+    Sys.setenv(START = interval[,"start"])
+    Sys.setenv(END   = interval[,"end"])
     
-    cat("running method '", method, "' from ", interval[, "start"], " to ", interval[, "end"], "\n", sep = "")
+    cat("running method '", method, "' from ", interval[,"start"], " to ", interval[,"end"], "\n", sep = "")
     
     source("runJob.R", local = TRUE, keep.source = FALSE)
   }

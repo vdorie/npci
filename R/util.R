@@ -32,3 +32,14 @@ substituteTermInLanguage <- function(lang, oldTerm, newTerm)
   }
   lang
 }
+
+args2env <- function(parent, ...)
+{
+  parList <- list(...)
+  substituteNames <- sapply(substitute(list(...)), deparse)[-1]
+  if (is.null(resultNames <- names(parList))) resultNames <- substituteNames
+  if (any(noNames <- resultNames == "")) resultNames[noNames] <- substituteNames[noNames]
+  setNames(parList, resultNames)
+
+  list2env(parList, parent = parent)
+}

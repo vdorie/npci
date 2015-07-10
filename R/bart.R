@@ -30,7 +30,7 @@ predict.bartSampler <- function(object, x, z, ndpost = 400L, keeptrainfits = TRU
     if (!identical(keeptrainfits, TRUE))
       NULL
     else
-      samples$train + matrix(groupMeans[sampler$data@x[, "z"] + 1], nrow(sampler$data@x), ndpost)
+      samples$train + matrix(groupMeans[sampler$data@x[,"z"] + 1], nrow(sampler$data@x), ndpost)
   
   if (identical(summarize, FALSE) || is.null(summarize))
     return (if (is.null(trainingSamples)) testSamples else list(train = trainingSamples, test = testSamples))
@@ -45,7 +45,11 @@ predict.bartSampler <- function(object, x, z, ndpost = 400L, keeptrainfits = TRU
                       bound = s.call)
   } else if (is.symbol(summarize)) {
     s.call <- quote(dummy(x))
-    s.call[1] <- summarize
+    s.call[[1]] <- summarize
+    summarize <- s.call
+  } else if (is.function(summarize)) {
+    s.call <- quote(dummy(x))
+    s.call[[1]] <- match.call()$summarize
     summarize <- s.call
   }
     

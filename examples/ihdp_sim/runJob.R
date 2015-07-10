@@ -1,6 +1,7 @@
 start   <- as.integer(Sys.getenv("START"))
 end     <- as.integer(Sys.getenv("END"))
 method  <- Sys.getenv("METHOD")
+verbose <- if ((verbose <- Sys.getenv("VERBOSE")) == "") TRUE else as.logical(verbose)
 
 require(npci)
 
@@ -25,6 +26,8 @@ w <- matrix(c(0, rep(0.5, ncol(x.dgp) - 1)), nrow(x.dgp), ncol(x.dgp), byrow = T
 
 for (i in seq_len(numReps)){ 
   iter <- i + start - 1
+  
+  if (verbose) cat("running iter ", iter, "\n", sep = "")
   
   ## places mu.0, mu.1, y.0, y.1, and y into calling env
   generateDataForIterInCurrentEnvironment(iter, x.dgp, z, w)

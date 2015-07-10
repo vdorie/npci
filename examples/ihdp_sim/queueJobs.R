@@ -22,14 +22,14 @@ for (i in seq_along(methods)) {
   
   for (j in seq_len(nrow(resultsIntervals))) {
     interval <- resultsIntervals[j,, drop = FALSE]
-    numRepsPerInterval <- unname(interval[, "end"] - interval[, "start"] + 1L)
+    numRepsPerInterval <- unname(interval[,"end"] - interval[,"start"] + 1L)
     
     numProcesses <- numRepsPerInterval %/% numRepsPerProcess[i] +
       if (numRepsPerInterval %% numRepsPerProcess[i] != 0) 1L else 0L
     numReps <- rep(numRepsPerInterval %/% numProcesses, numProcesses) +
       c(rep(1L, numRepsPerInterval %% numProcesses), rep(0L, numProcesses - numRepsPerInterval %% numProcesses))
     
-    start <- unname(interval[, "start"])
+    start <- unname(interval[,"start"])
     
     for (k in seq_len(numProcesses)) {
       end <- start + numReps[k] - 1

@@ -47,9 +47,9 @@ predict.naive2 <- function(object, x, z, error = NULL, ...) {
   oneRows  <- which(z == 1)
   
   result <- numeric(n)
-  if (error %in% c("sd", "se"))
+  if (!is.null(error) && error %in% c("sd", "se"))
     { error <- "se"; se <- numeric(n) }
-  if (error %in% c("var", "cov", "vcov"))
+  if (!is.null(error) && error %in% c("var", "cov", "vcov"))
     { error <- "vcov"; vcov <- matrix(0, n, n) }
   
   if (length(zeroRows) > 0) {
