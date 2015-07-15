@@ -1,7 +1,7 @@
 numReps <- 250L
 
 methods <- c("bart", "naive1", "naive2")
-setting <- "lowp"
+setting <- "" # "lowp"
 
 baseResultInterval <- matrix(c(1L, numReps), 1L, 2L,
                              dimnames = list(NULL, c("start", "end")))

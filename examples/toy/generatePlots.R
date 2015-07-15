@@ -28,9 +28,9 @@ generateToyData <- function() {
 }
 
 
-plotFit <- function(y, x, z, f0, f1, method)
+plotFit <- function(y, x, z, f0, f1, method, estimand = NULL, prob.z = NULL, main = method)
 {
-  fit <- ci.fit(y, x, z, method)
+  fit <- ci.fit(y, x, z, method, estimand, prob.z)
   
   xRange <- range(x)
   xRange <- 1.02 * (xRange - mean(xRange)) + mean(xRange)
@@ -71,7 +71,7 @@ plotFit <- function(y, x, z, f0, f1, method)
   yRange <- 1.02 * (yRange - mean(yRange)) + mean(yRange)
   
   plot(NULL, type = "n", xlim = range(xValues), ylim = yRange, xlab = "", ylab = "",
-       main = method)
+       main = main)
   polygon(poly.x, poly.y.0, col = rgb(0.95, 0.95, 0.95), border = NA)
   polygon(poly.x, poly.y.1, col = rgb(0.9, 0.9, 0.9), border = NA)
   lines(xValues, y.hat.1)
@@ -94,7 +94,12 @@ generatePlots <- function(path = ".") {
   dev.off()
   
   pdf(file.path(path, "toy_bart.pdf"), 3.5, 3.5)
-  plotFit(y, x, z, f0, f1, "bart")
+  par(mfrow = c(2, 2))
+  plotFit(y, x, z, f0, f1, "bart", main = "No Weights")
+  prob.z <- glm(z ~ x, family = binomial())$fitted
+  plotFit(y, x, z, f0, f1, "bart", "ate", prob.z, "ATE Weights")
+  plotFit(y, x, z, f0, f1, "bart", "att", prob.z, "ATT Weights")
+  plotFit(y, x, z, f0, f1, "bart", "atc", prob.z, "ATC Weights")
   dev.off()
   
   detach(toyData)
