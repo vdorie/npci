@@ -1,4 +1,3 @@
-setwd("~/Repositories/npci/examples/ihdp_sim")
 numReps <- 250L
 
 methods <- c("bart", "naive1", "naive2")
