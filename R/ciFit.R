@@ -1,8 +1,18 @@
-ci.fit <- function(y, x, z, method, ...) {
+ci.fit <- function(y, x, z, method, estimand, prob.z = NULL, ...) {
+  if (missing(estimand)) estimand <- NULL
+  else if (!is.null(estimand) && estimand %not_in% c("ate", "att", "atc"))
+    stop("estimand '", estimand, "' not recognized")
+  
+  w.est <- if (is.null(prob.z) || is.null(estimand)) NULL else
+    switch(estimand,
+           ate = ifelse(z, 1 / prob.z, 1 / (1 - prob.z)),
+           att = ifelse(z, 1, prob.z / (1 - prob.z)),
+           atc = ifelse(z, (1 - prob.z) / prob.z, 1))
+
   fit <- switch(method,
-                naive1 = fitNaive1(y, x, z),
-                naive2 = fitNaive2(y, x, z),
-                bart   = fitBart(y, x, z, ...))
+                naive1 = fitNaive1(y, x, z, w.est),
+                naive2 = fitNaive2(y, x, z, w.est),
+                bart   = fitBart(y, x, z, weights = w.est, ...))
 }
 
 
@@ -13,16 +23,11 @@ ci.estimate <- function(y, x, z, method, estimand, prob.z = NULL, ...) {
   if (estimand %not_in% c("ate", "att", "atc"))
     stop("estimand '", estimand, "' not recognized")
   
-  fitCall <- stripCallArguments(retargetCall(matchedCall, quote(ci.fit)), "estimand", "prob.z")
+  # fitCall <- stripCallArguments(retargetCall(matchedCall, quote(ci.fit)), "estimand")
+  fitCall <- retargetCall(matchedCall, quote(ci.fit))
   callingEnv <- parent.frame(1L)
   fit <- eval(fitCall, callingEnv)
-  
-  #w.est <- if (is.null(prob.z)) rep(1, length(z)) else
-  #  switch(estimand,
-  #         ate = ((z - prob.z) / (1 - prob.z)) / prob.z,
-  #         att = (z - prob.z) / (1 - prob.z),
-  #         atc = (z - prob.z) / prob.z)
-  
+    
   if (identical(method, "bart")) {
     if (identical(estimand, "ate")) {
       train.ind <- seq_len(NROW(x))

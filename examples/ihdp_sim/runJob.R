@@ -27,7 +27,7 @@ source("data.R")
 x <- as.matrix(x)
 w <- rep(0.5, ncol(x))
 
-## prob.z <- glm(z ~ x, family = binomial)$fitted
+prob.z <- glm(z ~ x, family = binomial)$fitted
 
 for (i in seq_len(numReps)){ 
   iter <- i + start - 1
@@ -58,10 +58,17 @@ for (i in seq_len(numReps)){
     precision[i] <- sqrt(mean((treatmentEffects - meanEffects)^2))
     
   } else if (method == "bartipw") {
-    # treatmentEffectSamples <- ci.estimate(y, x, z, prob.z = wts.atc, method = "bart", estimand = "atc")
-    # atcSamples <- apply(treatmentEffectSamples, 2, function(x) mean(x * wts.atc[z == )          ## average of people first
-    
-    
+    treatmentEffectSamples <- ci.estimate(y, x, z, method = "bart", estimand = "atc", prob.z = prob.z)
+    atcSamples <- apply(treatmentEffectSamples, 2, mean)          ## average of people first
+    results[i, "bias"] <- 4 - mean(atcSamples)
+    #ci <- quantile(atcSamples, c(0.025, 0.975))
+    ci <- mean(atcSamples) + sd(atcSamples) * qnorm(c(0.025, 0.975))
+    results[i, "cov"] <- if (ci[1] < 4 && ci[2] > 4) 1 else 0
+    results[i, "cil"] <- ci[2] - ci[1]
+    results[i, "wrong"] <- if (ci[1] < 0 && ci[2] > 0) 1 else 0
+  
+    treatmentEffects <- apply(treatmentEffectSamples, 1, mean)    ## average over samples
+    precision[i] <- sqrt(mean((treatmentEffects - meanEffects)^2))
   } else if (method %in% c("naive1", "naive2")) {
     atc <- ci.estimate(y, x, z, method = method, estimand = "atc")
     est <- mean(atc$te)

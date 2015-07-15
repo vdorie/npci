@@ -1,6 +1,6 @@
 ## point to directory above "data" dir/root of sim folder
 collateResults <- function(method, setting = NULL, dir = ".", consolidate = FALSE) {
-  prefix <- if (is.null(setting)) method else paste0(method, "_", setting)
+  prefix <- if (is.null(setting) || setting == "") method else paste0(method, "_", setting)
   
   files <- list.files("data", paste0(prefix, "_[0-9]+"))
   
@@ -54,7 +54,7 @@ collateResults <- function(method, setting = NULL, dir = ".", consolidate = FALS
 
 getResultIntervals <- function(method, setting = NULL, dir = ".")
 {
-  prefix <- if (is.null(setting)) method else paste0(method, "_", setting)
+  prefix <- if (is.null(setting) || setting == "") method else paste0(method, "_", setting)
   files <- list.files("data", paste0(prefix, "_[0-9]+"))
   
   resultNames <- list(NULL, c("start", "end"))
