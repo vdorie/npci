@@ -2,7 +2,7 @@
 collateResults <- function(method, setting = NULL, dir = ".", consolidate = FALSE) {
   prefix <- if (is.null(setting)) method else paste0(method, "_", setting)
   
-  files <- list.files("data", prefix)
+  files <- list.files("data", paste0(prefix, "_[0-9]+"))
   
   temp <- sapply(strsplit(files, "\\."), function(x) x[1])
   temp <- sapply(strsplit(temp, "_"), function(x) as.integer(x[2:3]))
@@ -55,7 +55,7 @@ collateResults <- function(method, setting = NULL, dir = ".", consolidate = FALS
 getResultIntervals <- function(method, setting = NULL, dir = ".")
 {
   prefix <- if (is.null(setting)) method else paste0(method, "_", setting)
-  files <- list.files("data", prefix)
+  files <- list.files("data", paste0(prefix, "_[0-9]+"))
   
   resultNames <- list(NULL, c("start", "end"))
   
