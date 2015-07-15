@@ -45,6 +45,15 @@ names(colAverages) <- colnames(x)
 columnIsContinuous <- apply(x, 2, function(col) is.numeric(col) && length(unique(col)) > 2)
 
 
+truth.0 <- function(x) {
+  x <- cbind(1, x)
+  sapply(seq_len(nrow(x)), function(i) f(x[i,])[1])
+}
+truth.1 <- truth.0
+environment(truth.0) <- npci:::args2env(baseenv(), f = f.0)
+environment(truth.1) <- npci:::args2env(baseenv(), f = f.1)
+
+
 numPoints <- 101
 testColInd <- 5
 
@@ -62,6 +71,8 @@ lines.n1.0 <- lines.bt.0
 lines.n1.1 <- lines.bt.0
 lines.n2.0 <- lines.bt.0
 lines.n2.1 <- lines.bt.0
+lines.tr.0 <- lines.bt.0
+lines.tr.1 <- lines.bt.0
 
 
 
@@ -82,6 +93,9 @@ lines.n1.0[,1] <- pred.n1.0$fit
 lines.n1.1[,1] <- pred.n1.1$fit
 lines.n2.0[,1] <- pred.n2.0$fit
 lines.n2.1[,1] <- pred.n2.1$fit
+lines.tr.0[,1] <- truth.0(x.test)
+lines.tr.1[,1] <- truth.1(x.test)
+
 
 poly.bt.0 <- cbind(pred.bt.0$bound[1,], rev(pred.bt.0$bound[2,]))
 poly.bt.1 <- cbind(pred.bt.1$bound[1,], rev(pred.bt.1$bound[2,]))
@@ -104,8 +118,10 @@ for (colInd in seq_len(ncol(x))) {
   lines.bt.1[,lineIndex] <- predict(fit.bt, x.test, 1, summarize = quote(mean(x)), keeptrainfits = FALSE)
   lines.n1.0[,lineIndex] <- predict(fit.n1, x.test, 0)
   lines.n1.1[,lineIndex] <- predict(fit.n1, x.test, 1)
-  lines.n2.0[,lineIndex] <- predict(fit.n2, x.test, 0, error = "se")$fit
-  lines.n2.1[,lineIndex] <- predict(fit.n2, x.test, 1, error = "se")$fit
+  lines.n2.0[,lineIndex] <- predict(fit.n2, x.test, 0)
+  lines.n2.1[,lineIndex] <- predict(fit.n2, x.test, 1)
+  lines.tr.0[,lineIndex] <- truth.0(x.test)
+  lines.tr.1[,lineIndex] <- truth.1(x.test)
   
   
   lineIndex <- lineIndex + 1
@@ -118,32 +134,16 @@ for (colInd in seq_len(ncol(x))) {
     lines.bt.1[,lineIndex] <- predict(fit.bt, x.test, 1, summarize = quote(mean(x)), keeptrainfits = FALSE)
     lines.n1.0[,lineIndex] <- predict(fit.n1, x.test, 0)
     lines.n1.1[,lineIndex] <- predict(fit.n1, x.test, 1)
-    lines.n2.0[,lineIndex] <- predict(fit.n2, x.test, 0, error = "se")$fit
-    lines.n2.1[,lineIndex] <- predict(fit.n2, x.test, 1, error = "se")$fit
+    lines.n2.0[,lineIndex] <- predict(fit.n2, x.test, 0)
+    lines.n2.1[,lineIndex] <- predict(fit.n2, x.test, 1)
+    lines.tr.0[,lineIndex] <- truth.0(x.test)
+    lines.tr.1[,lineIndex] <- truth.1(x.test)
     
     lineIndex <- lineIndex + 1
   }
   
   x.test[,colInd] <- colAverages[colInd]
 }
-
-
-wrapper.0 <- function(x) {
-  x.test <- c(1, x.test)
-  sapply(x, function(x.i) {
-    x.test[colInd] <- x.i
-    f.0(x.test)[1]
-  })
-}
-wrapper.1 <- function(x) {
-  x.test <- c(1, x.test)
-  sapply(x, function(x.i) {
-    x.test[colInd] <- x.i
-    f.1(x.test)[1]
-  })
-}
-environment(wrapper.0) <- npci:::args2env(baseenv(), colInd = testColInd + 1, f.0, f.1, x.test = colAverages)
-environment(wrapper.1) <- environment(wrapper.0)
 
 yRange <- range(y,
                 lines.bt.0, lines.bt.1, poly.bt.0, poly.bt.1,
@@ -173,12 +173,17 @@ points(x[,testColInd], y, col = ifelse(z == 1, "black", "gray"), pch = 20, cex =
 lines(xValues, lines.bt.0[,1], col = "blue", lwd = 1)
 lines(xValues, lines.bt.1[,1], col = "blue", lwd = 1)
 
-curve(wrapper.0, add = TRUE, col = "red")
-curve(wrapper.1, add = TRUE, col = "red")
+for (lineIndex in seq(2L, ncol(lines.bt.0))) {
+  lines(xValues, lines.tr.0[,lineIndex], col = "red", lwd = 0.35)
+  lines(xValues, lines.tr.1[,lineIndex], col = "red", lwd = 0.35)
+}
+
+lines(xValues, lines.tr.0[,1], col = "red")
+lines(xValues, lines.tr.1[,1], col = "red")
 
 
 plot(NULL, type = "n", xlim = xRange, ylim = yRange, xlab = colnames(x)[testColInd],
-     ylab = "Response", main = "Naive 1")
+     ylab = "Response", main = "Grouped")
 
 polygon(poly.x, poly.n1.0, col = rgb(0.95, 0.95, 0.95), border = NA)
 polygon(poly.x, poly.n1.1, col = rgb(0.90, 0.90, 0.90), border = NA)
@@ -192,12 +197,16 @@ points(x[,testColInd], y, col = ifelse(z == 1, "black", "gray"), pch = 20, cex =
 lines(xValues, lines.n1.0[,1], col = "blue", lwd = 1)
 lines(xValues, lines.n1.1[,1], col = "blue", lwd = 1)
 
-curve(wrapper.0, add = TRUE, col = "red")
-curve(wrapper.1, add = TRUE, col = "red")
+for (lineIndex in seq(2L, ncol(lines.bt.0))) {
+  lines(xValues, lines.tr.0[,lineIndex], col = rgb(1.0, 0.2, 0.2), lwd = 0.35)
+  lines(xValues, lines.tr.1[,lineIndex], col = rgb(1.0, 0.2, 0.2), lwd = 0.35)
+}
 
+lines(xValues, lines.tr.0[,1], col = "red")
+lines(xValues, lines.tr.1[,1], col = "red")
 
 plot(NULL, type = "n", xlim = xRange, ylim = yRange, xlab = colnames(x)[testColInd],
-     ylab = "Response", main = "Naive 2")
+     ylab = "Response", main = "Separated")
 
 polygon(poly.x, poly.n2.0, col = rgb(0.95, 0.95, 0.95), border = NA)
 polygon(poly.x, poly.n2.1, col = rgb(0.90, 0.90, 0.90), border = NA)
@@ -211,7 +220,12 @@ points(x[,testColInd], y, col = ifelse(z == 1, "black", "gray"), pch = 20, cex =
 lines(xValues, lines.n2.0[,1], col = "blue", lwd = 1)
 lines(xValues, lines.n2.1[,1], col = "blue", lwd = 1)
 
-curve(wrapper.0, add = TRUE, col = "red")
-curve(wrapper.1, add = TRUE, col = "red")
+for (lineIndex in seq(2L, ncol(lines.bt.0))) {
+  lines(xValues, lines.tr.0[,lineIndex], col = "red", lwd = 0.35)
+  lines(xValues, lines.tr.1[,lineIndex], col = "red", lwd = 0.35)
+}
+
+lines(xValues, lines.tr.0[,1], col = "red")
+lines(xValues, lines.tr.1[,1], col = "red")
 
 dev.off()
