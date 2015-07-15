@@ -4,12 +4,12 @@ collateResults <- function(method, setting = NULL, dir = ".", consolidate = FALS
   
   files <- list.files("data", paste0(prefix, "_[0-9]+"))
   
-  temp <- sapply(strsplit(files, "\\."), function(x) x[1])
-  temp <- sapply(strsplit(temp, "_"), function(x) as.integer(x[c(length(x) - 1, length(x))]))
+  temp <- sapply(strsplit(files, "\\."), function(x) x[1L])
+  temp <- sapply(strsplit(temp, "_"), function(x) as.integer(x[c(length(x) - 1L, length(x))]))
   start <- temp[1,]
   end   <- temp[2,]
   
-  results.t <- matrix(NA_real_, max(end), 5)
+  results.t <- matrix(NA_real_, max(end), 5L)
   colnames(results.t) <- c("bias", "cov", "cil", "wrong", "tau.est")
   precision.t <- rep(NA_real_, max(end))
   
@@ -25,23 +25,23 @@ collateResults <- function(method, setting = NULL, dir = ".", consolidate = FALS
     
     numResults <- length(precision.t)
     
-    start <- 1
-    while (start <= numResults && is.na(precision.t[start])) start <- start + 1
-    end  <- start + 1
+    start <- 1L
+    while (start <= numResults && is.na(precision.t[start])) start <- start + 1L
+    end  <- start + 1L
     
     while (start <= numResults) {
-      while (end <= numResults && !is.na(precision.t[end])) end <- end + 1
+      while (end <= numResults && !is.na(precision.t[end])) end <- end + 1L
       
-      resultsRange <- seq.int(start, end - 1)
+      resultsRange <- seq.int(start, end - 1L)
       results <- results.t[resultsRange,]
       precision <- precision.t[resultsRange]
       
-      fileName <- paste0(prefix, "_", start, "_", end - 1, ".RData")
+      fileName <- paste0(prefix, "_", start, "_", end - 1L, ".RData")
       save(results, precision, file = file.path(dir = ".", "data", fileName))
       
       start <- end
-      while (start <= numResults && is.na(precision.t[start])) start <- start + 1
-      end   <- start + 1
+      while (start <= numResults && is.na(precision.t[start])) start <- start + 1L
+      end   <- start + 1L
     }
   }
   
@@ -59,20 +59,20 @@ getResultIntervals <- function(method, setting = NULL, dir = ".")
   
   resultNames <- list(NULL, c("start", "end"))
   
-  if (length(files) == 0) return(matrix(integer(), 0, 2, dimnames = resultNames))
+  if (length(files) == 0L) return(matrix(integer(), 0L, 2L, dimnames = resultNames))
   
-  temp <- sapply(strsplit(files, "\\."), function(x) x[1])
-  temp <- sapply(strsplit(temp, "_"), function(x) as.integer(x[c(length(x) - 1, length(x))]))
-  start <- temp[1,]
-  end   <- temp[2,]
+  temp <- sapply(strsplit(files, "\\."), function(x) x[1L])
+  temp <- sapply(strsplit(temp, "_"), function(x) as.integer(x[c(length(x) - 1L, length(x))]))
+  start <- temp[1L,]
+  end   <- temp[2L,]
   
-  if (length(files) == 1) return(matrix(c(start[1], end[1]), 1, 2, dimnames = resultNames))
+  if (length(files) == 1L) return(matrix(c(start[1L], end[1L]), 1L, 2L, dimnames = resultNames))
   
-  for (i in seq.int(2, length(start))) {
-    if (start[i] == end[i - 1] - 1)  {
-      start[i] <- start[i - 1]
-      start[i - 1] <- NA
-      end[i - 1] <- NA
+  for (i in seq.int(2L, length(start))) {
+    if (start[i] == end[i - 1L] - 1L)  {
+      start[i] <- start[i - 1L]
+      start[i - 1L] <- NA
+      end[i - 1L] <- NA
     }
   }
   validRows <- !is.na(start)
@@ -82,13 +82,13 @@ getResultIntervals <- function(method, setting = NULL, dir = ".")
 ## a and b are unions of intervals
 intervalSubtraction <- function(a, b)
 {
-  if (NROW(b) == 0) return(a)
+  if (NROW(b) == 0L) return(a)
   
   ## total cheese, but we just use ranges
   a.r <- seq.int(a[1L, "start"], a[1L, "end"])
   if (NROW(a) > 1L) for (i in 2L:nrow(a)) a.r <- c(a.r, seq.int(a[i, "start"], a[i, "end"]))
   
-  b.r <- seq.int(b[1, "start"], b[1, "end"])
+  b.r <- seq.int(b[1L, "start"], b[1L, "end"])
   if (NROW(b) > 1L) for (i in 2L:nrow(b)) b.r <- c(b.r, seq.int(b[i, "start"], b[i, "end"]))
   
   c <- sort(setdiff(a.r, b.r))
@@ -106,7 +106,7 @@ intervalSubtraction <- function(a, b)
     while (rh <= n && c[rh] == c[rh - 1L] + 1L) rh <- rh + 1L
     m <- m + 1L
     start[m] <- c[lh]
-    end[m]   <- c[rh - 1]
+    end[m]   <- c[rh - 1L]
     lh <- rh
     rh <- lh + 1L
   }
