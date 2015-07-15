@@ -5,7 +5,7 @@ collateResults <- function(method, setting = NULL, dir = ".", consolidate = FALS
   files <- list.files("data", paste0(prefix, "_[0-9]+"))
   
   temp <- sapply(strsplit(files, "\\."), function(x) x[1])
-  temp <- sapply(strsplit(temp, "_"), function(x) as.integer(x[2:3]))
+  temp <- sapply(strsplit(temp, "_"), function(x) as.integer(x[c(length(x) - 1, length(x))]))
   start <- temp[1,]
   end   <- temp[2,]
   
@@ -60,8 +60,9 @@ getResultIntervals <- function(method, setting = NULL, dir = ".")
   resultNames <- list(NULL, c("start", "end"))
   
   if (length(files) == 0) return(matrix(integer(), 0, 2, dimnames = resultNames))
+  
   temp <- sapply(strsplit(files, "\\."), function(x) x[1])
-  temp <- sapply(strsplit(temp, "_"), function(x) as.integer(x[2:3]))
+  temp <- sapply(strsplit(temp, "_"), function(x) as.integer(x[c(length(x) - 1, length(x))]))
   start <- temp[1,]
   end   <- temp[2,]
   
