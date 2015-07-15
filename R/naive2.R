@@ -21,8 +21,8 @@ fitNaive2 <- function(y, x, z) {
   stringConnection <- textConnection("ignored", "w", local = TRUE)
   sink(stringConnection)
   
-  fit.0 <- mlegp(df.0[, covCols], df.0$y, nugget = sig.est.0^2, verbose = 0)
-  fit.1 <- mlegp(df.1[, covCols], df.1$y, nugget = sig.est.1^2, verbose = 0)
+  fit.0 <- mlegp(df.0[,covCols], df.0$y, nugget = sig.est.0^2, verbose = 0)
+  fit.1 <- mlegp(df.1[,covCols], df.1$y, nugget = sig.est.1^2, verbose = 0)
   
   sink()
   close(stringConnection)

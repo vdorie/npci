@@ -1,9 +1,9 @@
-fitBart <- function(y, x, z, ntree = 50L, nskip = 200L) {
+fitBart <- function(y, x, z, weights = NULL, ntree = 50L, nskip = 200L) {
   df <- as.data.frame(x)
   groupMeans <- c(mean(y[z == 0]), mean(y[z == 1]))
   df$y <- y - groupMeans[z + 1]
   df$z <- z
-  sampler <- dbarts(y ~ ., df, control = dbartsControl(n.trees = ntree, n.burn = nskip, updateState = FALSE))
+  sampler <- dbarts(y ~ ., df, weights = weights, control = dbartsControl(n.trees = ntree, n.burn = nskip, updateState = FALSE))
   sampler$run(nskip, 0)
   
   result <- namedList(sampler, groupMeans)

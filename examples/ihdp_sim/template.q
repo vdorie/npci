@@ -12,6 +12,7 @@ module load r/intel/3.2.0
 RUNDIR=$HOME/gpcomp
 
 export METHOD=method
+export SETTING=setting
 export START=start
 export END=end
 cd $RUNDIR

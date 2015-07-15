@@ -16,7 +16,7 @@ fitNaive1 <- function(y, x, z) {
   stringConnection <- textConnection("ignored", "w", local = TRUE)
   sink(stringConnection)
   
-  fit <- mlegp(df[, covCols], df$y, nugget = sig.est^2, verbose = 0)
+  fit <- mlegp(df[,covCols], df$y, nugget = sig.est^2, verbose = 0)
   
   sink()
   close(stringConnection)
@@ -62,7 +62,7 @@ fitted.naive1 <- function(object, se = FALSE, ...) {
   groupMeans <- object$groupMeans
   
   y.hat <- predict(fit, se.fit = se)
-  offset <- groupMeans[fit$X[, "z"]]
+  offset <- groupMeans[fit$X[,"z"]]
   
   if (identical(se, TRUE))
     return(list(fit    = transform(y = y.hat$fit,    trans = trans$inverse, simplify = TRUE) + offset,

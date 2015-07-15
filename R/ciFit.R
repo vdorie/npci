@@ -7,12 +7,21 @@ ci.fit <- function(y, x, z, method, ...) {
 
 
 
-ci.estimate <- function(y, x, z, method, estimand, ...) {
+ci.estimate <- function(y, x, z, method, estimand, prob.z = NULL, ...) {
   matchedCall <- match.call()
   
-  fitCall <- stripCallArguments(retargetCall(matchedCall, quote(ci.fit)), "estimand")
+  if (estimand %not_in% c("ate", "att", "atc"))
+    stop("estimand '", estimand, "' not recognized")
+  
+  fitCall <- stripCallArguments(retargetCall(matchedCall, quote(ci.fit)), "estimand", "prob.z")
   callingEnv <- parent.frame(1L)
   fit <- eval(fitCall, callingEnv)
+  
+  #w.est <- if (is.null(prob.z)) rep(1, length(z)) else
+  #  switch(estimand,
+  #         ate = ((z - prob.z) / (1 - prob.z)) / prob.z,
+  #         att = (z - prob.z) / (1 - prob.z),
+  #         atc = (z - prob.z) / prob.z)
   
   if (identical(method, "bart")) {
     if (identical(estimand, "ate")) {

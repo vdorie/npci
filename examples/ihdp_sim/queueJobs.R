@@ -4,6 +4,7 @@ totalNumReps <- 250L
 
 methods <- c("bart", "naive1", "naive2")
 numRepsPerProcess <- c(250L, 5L, 10L)
+setting <- "lowp"
 
 if (!dir.exists("jobs")) dir.create("jobs")
 
@@ -12,10 +13,13 @@ baseResultInterval <- matrix(c(1L, totalNumReps), 1L, 2L,
 
 source("results.R")
 
+jobIter <- 1L
+
 for (i in seq_along(methods)) {
   method <- methods[i]
+  prefix <- if (is.null(setting)) method else paste0(method, "_", setting)
   
-  existingResults <- getResultIntervals(method)
+  existingResults <- getResultIntervals(method, setting)
   
   resultsIntervals <- intervalSubtraction(baseResultInterval, existingResults)
   if (nrow(resultsIntervals) == 0) next
@@ -32,15 +36,18 @@ for (i in seq_along(methods)) {
     start <- unname(interval[,"start"])
     
     for (k in seq_len(numProcesses)) {
-      end <- start + numReps[k] - 1
+      jobName <- paste0(prefix, "_", jobIter)
+      jobIter <- jobIter + 1L
+      
+      end <- start + numReps[k] - 1L
             
-      args <- paste0("'s/jobname/", jobName, "/s;s/method/", method, "/;s/start/", start, "/;s/end/", end, "/'")
+      args <- paste0("'s/jobname/", jobName, "/;s/method/", method, "/;s/setting/", setting, "/;s/start/", start, "/;s/end/", end, "/'")
       system2("sed", args,
               stdout = paste0("jobs/", jobName, ".q"),
               stdin  = "template.q")
       system2("qsub", paste0("jobs/", jobName, ".q"))
       
-      start <- end + 1
+      start <- end + 1L
     }
   }
 }

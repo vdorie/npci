@@ -18,10 +18,16 @@ z <- ihdp$treat
 
 rm(dataFile, ihdp, covariateNames, trans)
 
-generateDataForIterInCurrentEnvironment <- function(iter, x, z, w) {
+generateDataForIterInCurrentEnvironment <- function(iter, x, z, w, setting = NULL) {
   callingEnv <- parent.frame(1L)
   
   set.seed(iter * 5 + if (iter <= 500) 564 else 7565)
+  
+  if (identical(setting, "lowp")) {
+    cols <- sample(ncol(x), 5)
+    x <- x[,cols]
+    w <- w[cols]
+  }
   
   x <- cbind(1, x)
   
@@ -30,8 +36,13 @@ generateDataForIterInCurrentEnvironment <- function(iter, x, z, w) {
   sigma.y <- 1
   w.full <- matrix(c(0, w), n, p, byrow = TRUE)
   
-  beta <- sample(seq(0.0, 0.4, 0.1), p, replace = TRUE,
-                 prob = c(0.6, rep(0.1, 4)))
+  if (identical(setting, "lowp")) {
+    beta <- sample(seq(0.0, 0.4, 0.1), p, replace = TRUE,
+                   prob = c(0.2, rep(0.2, 4)))
+  } else {
+    beta <- sample(seq(0.0, 0.4, 0.1), p, replace = TRUE,
+                   prob = c(0.6, rep(0.1, 4)))
+  }
   
   mu.0 <- exp((x + w.full) %*% beta)
   mu.1 <- x %*% beta

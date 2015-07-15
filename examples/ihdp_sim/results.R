@@ -1,6 +1,8 @@
 ## point to directory above "data" dir/root of sim folder
-collateResults <- function(method, dir = ".", consolidate = FALSE) {
-  files <- list.files("data", method)
+collateResults <- function(method, setting = NULL, dir = ".", consolidate = FALSE) {
+  prefix <- if (is.null(setting)) method else paste0(method, "_", setting)
+  
+  files <- list.files("data", prefix)
   
   temp <- sapply(strsplit(files, "\\."), function(x) x[1])
   temp <- sapply(strsplit(temp, "_"), function(x) as.integer(x[2:3]))
@@ -34,7 +36,7 @@ collateResults <- function(method, dir = ".", consolidate = FALSE) {
       results <- results.t[resultsRange,]
       precision <- precision.t[resultsRange]
       
-      fileName <- paste0(method, "_", start, "_", end - 1, ".RData")
+      fileName <- paste0(prefix, "_", start, "_", end - 1, ".RData")
       save(results, precision, file = file.path(dir = ".", "data", fileName))
       
       start <- end
@@ -50,13 +52,14 @@ collateResults <- function(method, dir = ".", consolidate = FALSE) {
   return(list(results = results.t, precision = precision.t))
 }
 
-getResultIntervals <- function(method, dir = ".")
+getResultIntervals <- function(method, setting = NULL, dir = ".")
 {
-  files <- list.files("data", method)
+  prefix <- if (is.null(setting)) method else paste0(method, "_", setting)
+  files <- list.files("data", prefix)
   
   resultNames <- list(NULL, c("start", "end"))
   
-  if (length(files) == 0) return(matrix(integer(), 0, 0, dimnames = resultNames))
+  if (length(files) == 0) return(matrix(integer(), 0, 2, dimnames = resultNames))
   temp <- sapply(strsplit(files, "\\."), function(x) x[1])
   temp <- sapply(strsplit(temp, "_"), function(x) as.integer(x[2:3]))
   start <- temp[1,]
@@ -78,6 +81,8 @@ getResultIntervals <- function(method, dir = ".")
 ## a and b are unions of intervals
 intervalSubtraction <- function(a, b)
 {
+  if (NROW(b) == 0) return(a)
+  
   ## total cheese, but we just use ranges
   a.r <- seq.int(a[1L, "start"], a[1L, "end"])
   if (NROW(a) > 1L) for (i in 2L:nrow(a)) a.r <- c(a.r, seq.int(a[i, "start"], a[i, "end"]))

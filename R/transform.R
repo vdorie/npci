@@ -1,27 +1,49 @@
-getTransformations <- function(x, ignore = NULL)
+getTransformations <- function(x, ignore = NULL, type = "norm")
 {
   ## cc - continuous columns
   cc <- sapply(x, function(col) is.numeric(col) && length(unique(col)) > 2)
   if (!is.null(ignore)) cc <- cc & names(x) %not_in% ignore
   
-  standardize <- lapply(names(x)[cc], function(name) {
-    res <- function(x) { (x - mu) / sig }
-    environment(res) <- list2env(list(mu = mean(x[[name]]), sig = sd(x[[name]])), parent = baseenv())
-    res
-  })
-  names(standardize) <- names(x)[cc]
-  inverse <- lapply(names(x)[cc], function(name) {
-    res <- function(y) { y * sig + mu }
-    environment(res) <- list2env(list(mu = mean(x[[name]]), sig = sd(x[[name]])), parent = baseenv())
-    res
-  })
-  names(inverse) <- names(x)[cc]
-  scale <- lapply(names(x)[cc], function(name) {
-    res <- function(x) x * sig
-    environment(res) <- list2env(list(sig = sd(x[[name]])), parent = baseenv())
-    res
-  })
-  names(scale) <- names(x)[cc]
+  if (identical(type, "norm")) {
+    fnEnvs <- lapply(names(x)[cc], function(name) { args2env(baseenv(), mu = mean(x[[name]]), sig = sd(x[[name]])) })
+    names(fnEnvs) <- names(x)[cc]
+    standardize <- lapply(names(x)[cc], function(name) {
+      res <- function(x) { (x - mu) / sig }
+      environment(res) <- fnEnvs[[name]]
+      res
+    })
+    inverse <- lapply(names(x)[cc], function(name) {
+      res <- function(y) { y * sig + mu }
+      environment(res) <- fnEnvs[[name]]
+      res
+    })
+    scale <- lapply(names(x)[cc], function(name) {
+      res <- function(y) y * sig
+      environment(res) <- fnEnvs[[name]]
+      res
+    })
+    names(standardize) <- names(inverse) <- names(scale) <- names(x)[cc]
+  } else if (identical(type, "cube")) {
+    fnEnvs <- lapply(seq_along(x), function(j) { args2env(baseenv(), m = min(x[[j]]), Mm = max(x[[j]]) - min(x[[j]])) })
+    standardize <- lapply(seq_along(x), function(j) {
+      res <- function(x) { (x - m) / Mm }
+      environment(res) <- fnEnvs[[j]]
+      res
+    })
+    inverse <- lapply(seq_along(x), function(j) {
+      res <- function(y) { y * Mm + m }
+      environment(res) <- fnEnvs[[j]]
+      res
+    })
+    scale <- lapply(seq_along(x), function(j) {
+      res <- function(y) { y * Mm }
+      environment(res) <- fnEnvs[[j]]
+      res
+    })
+    names(standardize) <- names(inverse) <- names(scale) <- names(x)
+  } else {
+    stop("unrecognized transformation type: ", type)
+  }
 
   namedList(standardize, inverse, scale)
 }

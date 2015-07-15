@@ -1,11 +1,14 @@
 start   <- as.integer(Sys.getenv("START"))
 end     <- as.integer(Sys.getenv("END"))
+setting <- if ((setting <- Sys.getenv("SETTING")) == "") NULL else setting
 method  <- Sys.getenv("METHOD")
 verbose <- if ((verbose <- Sys.getenv("VERBOSE")) == "") TRUE else as.logical(verbose)
 
 require(npci)
 
-resultsFileName <- paste0(method, "_", start, "_", end, ".RData")
+prefix <- if (is.null(setting)) method else paste0(method, "_", setting)
+
+resultsFileName <- paste0(prefix, "_", start, "_", end, ".RData")
 resultsFile <- file.path("data", resultsFileName)
 
 if (file.exists(resultsFileName)) q("no")
@@ -21,8 +24,10 @@ precision <- rep(NA_real_, numReps)
 
 source("data.R")
 
-x.dgp <- cbind(1, as.matrix(x))
-w <- matrix(c(0, rep(0.5, ncol(x.dgp) - 1)), nrow(x.dgp), ncol(x.dgp), byrow = TRUE)
+x <- as.matrix(x)
+w <- rep(0.5, ncol(x))
+
+## prob.z <- glm(z ~ x, family = binomial)$fitted
 
 for (i in seq_len(numReps)){ 
   iter <- i + start - 1
@@ -30,7 +35,7 @@ for (i in seq_len(numReps)){
   if (verbose) cat("running iter ", iter, "\n", sep = "")
   
   ## places mu.0, mu.1, y.0, y.1, and y into calling env
-  generateDataForIterInCurrentEnvironment(iter, x.dgp, z, w)
+  generateDataForIterInCurrentEnvironment(iter, x, z, w, setting)
     
   meanEffects  <- mu.1[z == 0] - mu.0[z == 0]
   results[i, "tau.est"] <- mean(y.1[z == 0] -  y.0[z == 0])
@@ -52,7 +57,12 @@ for (i in seq_len(numReps)){
     treatmentEffects <- apply(treatmentEffectSamples, 1, mean)    ## average over samples
     precision[i] <- sqrt(mean((treatmentEffects - meanEffects)^2))
     
-  } else if (method == "naive1" || method == "naive2") {
+  } else if (method == "bartipw") {
+    # treatmentEffectSamples <- ci.estimate(y, x, z, prob.z = wts.atc, method = "bart", estimand = "atc")
+    # atcSamples <- apply(treatmentEffectSamples, 2, function(x) mean(x * wts.atc[z == )          ## average of people first
+    
+    
+  } else if (method %in% c("naive1", "naive2")) {
     atc <- ci.estimate(y, x, z, method = method, estimand = "atc")
     est <- mean(atc$te)
     se  <- atc$se
