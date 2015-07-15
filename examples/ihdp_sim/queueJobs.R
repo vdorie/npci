@@ -1,5 +1,8 @@
 ## for use with TORQUE/PBS/qsub
 
+if (require(npci, quietly = TRUE) == FALSE)
+  stop("npci package not available")
+
 totalNumReps <- 250L
 
 methods <- c("bart", "naive1", "naive2")
