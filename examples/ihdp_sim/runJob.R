@@ -1,26 +1,26 @@
-start   <- as.integer(Sys.getenv("START"))
-end     <- as.integer(Sys.getenv("END"))
-setting <- if ((setting <- Sys.getenv("SETTING")) == "") NULL else setting
-method  <- Sys.getenv("METHOD")
-verbose <- if ((verbose <- Sys.getenv("VERBOSE")) == "") TRUE else as.logical(verbose)
+start      <- as.integer(Sys.getenv("START"))
+end        <- as.integer(Sys.getenv("END"))
+overlap    <- if ((overlap <- Sys.getenv("OVERLAP")) == "") TRUE else as.logical(overlap)
+covariates <- if ((covariates <- Sys.getenv("COVARIATES")) == "") "full" else covariates
+method     <- Sys.getenv("METHOD")
+verbose    <- if ((verbose <- Sys.getenv("VERBOSE")) == "") TRUE else as.logical(verbose)
 
 require(npci)
+source("results.R")
 
-prefix <- if (is.null(setting)) method else paste0(method, "_", setting)
+prefix <- getPrefix(method, overlap, covariates)
 
 resultsFileName <- paste0(prefix, "_", start, "_", end, ".RData")
 resultsFile <- file.path("data", resultsFileName)
 
 if (file.exists(resultsFileName)) q("no")
 
-numReps <- end - start + 1
+numReps <- end - start + 1L
 
-results <- matrix(NA, numReps, 5)
+results <- matrix(NA, numReps, 6L)
 
 colnames(results) <- 
-  c("bias", "cov", "cil", "wrong", "tau.est")
-
-precision <- rep(NA_real_, numReps)
+  c("bias", "cov", "cil", "wrong", "tau.est", "precision")
 
 source("data.R")
 
@@ -29,59 +29,62 @@ w <- rep(0.5, ncol(x))
 
 prob.z <- glm(z ~ x, family = binomial)$fitted
 
+estimand <- if (identical(overlap, TRUE)) "att" else "atc"
+
 for (i in seq_len(numReps)){ 
-  iter <- i + start - 1
+  iter <- i + start - 1L
   
-  if (verbose) cat("running iter ", iter, "\n", sep = "")
+  if (verbose) cat("  running iter ", iter, "\n", sep = "")
   
   ## places mu.0, mu.1, y.0, y.1, and y into calling env
-  generateDataForIterInCurrentEnvironment(iter, x, z, w, setting)
+  generateDataForIterInCurrentEnvironment(iter, x, z, w, overlap, covariates)
     
-  meanEffects  <- mu.1[z == 0] - mu.0[z == 0]
+  meanEffects <- if (identical(overlap, TRUE)) mu.1[z == 1] - mu.0[z == 1] else mu.1[z == 0] - mu.0[z == 0]
   results[i, "tau.est"] <- mean(y.1[z == 0] -  y.0[z == 0])
   
   if (method == "bart") {
     ## bart section
     
-    ## te - treatment effect, or calculated difference
     ## each sample is a treatment effect, by person and by replication
-    treatmentEffectSamples <- ci.estimate(y, x, z, method = "bart", estimand = "atc")
-    atcSamples <- apply(treatmentEffectSamples, 2, mean)          ## average of people first
-    results[i, "bias"] <- 4 - mean(atcSamples)
+    treatmentEffectSamples <- ci.estimate(y, x.r, z, method = "bart", estimand = estimand)
+    ## average over people first, produces samples of ATC or ATT
+    estimandSamples <- apply(treatmentEffectSamples, 2L, mean)
+    results[i, "bias"] <- 4 - mean(estimandSamples)
     #ci <- quantile(atcSamples, c(0.025, 0.975))
-    ci <- mean(atcSamples) + sd(atcSamples) * qnorm(c(0.025, 0.975))
-    results[i, "cov"] <- if (ci[1] < 4 && ci[2] > 4) 1 else 0
-    results[i, "cil"] <- ci[2] - ci[1]
-    results[i, "wrong"] <- if (ci[1] < 0 && ci[2] > 0) 1 else 0
+    ci <- mean(estimandSamples) + sd(estimandSamples) * qnorm(c(0.025, 0.975))
+    results[i, "cov"] <- if (ci[1L] < 4 && ci[2L] > 4) 1 else 0
+    results[i, "cil"] <- ci[2L] - ci[1L]
+    results[i, "wrong"] <- if (ci[1L] < 0 && ci[2L] > 0) 1 else 0
   
-    treatmentEffects <- apply(treatmentEffectSamples, 1, mean)    ## average over samples
-    precision[i] <- sqrt(mean((treatmentEffects - meanEffects)^2))
+    ## average over samples, produces per-person TE estimates
+    treatmentEffects <- apply(treatmentEffectSamples, 1L, mean)
+    results[i, "precision"] <- sqrt(mean((treatmentEffects - meanEffects)^2))
     
   } else if (method == "bartipw") {
-    treatmentEffectSamples <- ci.estimate(y, x, z, method = "bart", estimand = "atc", prob.z = prob.z)
-    atcSamples <- apply(treatmentEffectSamples, 2, mean)          ## average of people first
+    treatmentEffectSamples <- ci.estimate(y, x.r, z, method = "bart", estimand = estimand, prob.z = prob.z)
+    atcSamples <- apply(treatmentEffectSamples, 2L, mean)
     results[i, "bias"] <- 4 - mean(atcSamples)
     #ci <- quantile(atcSamples, c(0.025, 0.975))
     ci <- mean(atcSamples) + sd(atcSamples) * qnorm(c(0.025, 0.975))
-    results[i, "cov"] <- if (ci[1] < 4 && ci[2] > 4) 1 else 0
-    results[i, "cil"] <- ci[2] - ci[1]
-    results[i, "wrong"] <- if (ci[1] < 0 && ci[2] > 0) 1 else 0
+    results[i, "cov"] <- if (ci[1L] < 4 && ci[2L] > 4) 1 else 0
+    results[i, "cil"] <- ci[2L] - ci[1L]
+    results[i, "wrong"] <- if (ci[1L] < 0 && ci[2L] > 0) 1 else 0
   
-    treatmentEffects <- apply(treatmentEffectSamples, 1, mean)    ## average over samples
-    precision[i] <- sqrt(mean((treatmentEffects - meanEffects)^2))
+    treatmentEffects <- apply(treatmentEffectSamples, 1, mean)
+    results[i, "precision"] <- sqrt(mean((treatmentEffects - meanEffects)^2))
   } else if (method %in% c("naive1", "naive2")) {
-    atc <- ci.estimate(y, x, z, method = method, estimand = "atc")
+    atc <- ci.estimate(y, x.r, z, method = method, estimand = estimand)
     est <- mean(atc$te)
     se  <- atc$se
     results[i, "bias"] <- 4 - est
     ci <- est + se * qnorm(c(0.025, 0.975))
-    results[i, "cov"] <- if (ci[1] < 4 && ci[2] > 4) 1 else 0
-    results[i, "cil"] <- ci[2] - ci[1]
-    results[i, "wrong"] <- if (ci[1] < 0 && ci[2] > 0) 1 else 0
-    precision[i] <- sqrt(mean((atc$te - meanEffects)^2))
+    results[i, "cov"] <- if (ci[1L] < 4 && ci[2L] > 4) 1 else 0
+    results[i, "cil"] <- ci[2L] - ci[1L]
+    results[i, "wrong"] <- if (ci[1L] < 0 && ci[2L] > 0) 1 else 0
+    results[i, "precision"] <- sqrt(mean((atc$te - meanEffects)^2))
   } else {
     stop("method '", method, "' unrecognized")
   }
 }
 
-save(results, precision, file = resultsFile)
+save(results, file = resultsFile)

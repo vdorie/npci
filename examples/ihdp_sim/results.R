@@ -1,61 +1,61 @@
+getPrefix <- function(method, overlap = TRUE, covariates = "full") {
+  paste0(method, "_", if (overlap) "overlap" else "nonoverlap", "_", if (identical(covariates, "reduced")) "reduced" else "full")
+}
+
 ## point to directory above "data" dir/root of sim folder
-collateResults <- function(method, setting = NULL, dir = ".", consolidate = FALSE) {
-  prefix <- if (is.null(setting) || setting == "") method else paste0(method, "_", setting)
+collateResults <- function(method, overlap = TRUE, covariates = "full", dir = ".", consolidate = FALSE) {
+  prefix <- getPrefix(method, overlap, covariates)
   
-  files <- list.files("data", paste0(prefix, "_[0-9]+"))
+  files <- list.files(file.path(dir, "data"), paste0(prefix, "_[0-9]+"))
   
   temp <- sapply(strsplit(files, "\\."), function(x) x[1L])
   temp <- sapply(strsplit(temp, "_"), function(x) as.integer(x[c(length(x) - 1L, length(x))]))
   start <- temp[1,]
   end   <- temp[2,]
   
-  results.t <- matrix(NA_real_, max(end), 5L)
-  colnames(results.t) <- c("bias", "cov", "cil", "wrong", "tau.est")
-  precision.t <- rep(NA_real_, max(end))
+  results.t <- matrix(NA_real_, max(end), 6L)
+  colnames(results.t) <- c("bias", "cov", "cil", "wrong", "tau.est", "precision")
   
   for (i in seq_along(files)) {
     load(file.path(dir, "data", files[i]))
     resultsRange <- seq.int(start[i], end[i])
     results.t[resultsRange,] <- results
-    precision.t[resultsRange] <- precision
   }
   
   if (consolidate == TRUE) {
     unlink(file.path(dir, "data", files))
     
-    numResults <- length(precision.t)
+    numResults <- nrow(results.t)
     
     start <- 1L
-    while (start <= numResults && is.na(precision.t[start])) start <- start + 1L
+    while (start <= numResults && any(is.na(results.t[start,]))) start <- start + 1L
     end  <- start + 1L
     
     while (start <= numResults) {
-      while (end <= numResults && !is.na(precision.t[end])) end <- end + 1L
+      while (end <= numResults && !any(is.na(results.t[end,]))) end <- end + 1L
       
       resultsRange <- seq.int(start, end - 1L)
       results <- results.t[resultsRange,]
-      precision <- precision.t[resultsRange]
       
       fileName <- paste0(prefix, "_", start, "_", end - 1L, ".RData")
-      save(results, precision, file = file.path(dir = ".", "data", fileName))
+      save(results, file = file.path(dir = ".", "data", fileName))
       
       start <- end
-      while (start <= numResults && is.na(precision.t[start])) start <- start + 1L
+      while (start <= numResults && any(is.na(results.t[start,]))) start <- start + 1L
       end   <- start + 1L
     }
   }
   
-  naRows <- is.na(precision.t)
+  naRows <- apply(results, 1, function(row) any(is.na(row)))
   results.t <- results.t[!naRows,]
-  precision.t <- precision.t[!naRows]
   
-  return(list(results = results.t, precision = precision.t))
+  results.t
 }
 
-getResultIntervals <- function(method, setting = NULL, dir = ".")
+getResultIntervals <- function(method, overlap = TRUE, covariates = "full", dir = ".")
 {
-  prefix <- if (is.null(setting) || setting == "") method else paste0(method, "_", setting)
-  files <- list.files("data", paste0(prefix, "_[0-9]+"))
+  prefix <- getPrefix(method, overlap, covariates)
+  files <- list.files(file.path(dir, "data"), paste0(prefix, "_[0-9]+"))
   
   resultNames <- list(NULL, c("start", "end"))
   

@@ -1,5 +1,5 @@
 dataFile <- file.path("data", "ihdp.RData")
-if (!file.exists(dataFile)) stop("ihdp data file not available")
+if (!file.exists(dataFile)) stop("ihdp data file not found at path: ", dataFile)
 
 load(dataFile)
 
@@ -18,16 +18,17 @@ z <- ihdp$treat
 
 rm(dataFile, ihdp, covariateNames, trans)
 
-generateDataForIterInCurrentEnvironment <- function(iter, x, z, w, setting = NULL) {
+generateDataForIterInCurrentEnvironment <- function(iter, x, z, w, overlap = TRUE, covariates = "full") {
   callingEnv <- parent.frame(1L)
   
-  set.seed(iter * 5 + if (iter <= 500) 564 else 7565)
+  set.seed(iter * 5L + if (iter <= 500L) 565L else 7565L)
   
-  if (identical(setting, "lowp")) {
+  if (identical(covariates, "reduced")) {
     cols <- sample(ncol(x), 5)
     x <- x[,cols]
     w <- w[cols]
   }
+  callingEnv$x.r <- x
   
   x <- cbind(1, x)
   
@@ -36,7 +37,7 @@ generateDataForIterInCurrentEnvironment <- function(iter, x, z, w, setting = NUL
   sigma.y <- 1
   w.full <- matrix(c(0, w), n, p, byrow = TRUE)
   
-  if (identical(setting, "lowp")) {
+  if (identical(covariates, "reduced")) {
     beta <- sample(seq(0.0, 0.4, 0.1), p, replace = TRUE,
                    prob = c(0.2, rep(0.2, 4)))
   } else {
@@ -47,7 +48,10 @@ generateDataForIterInCurrentEnvironment <- function(iter, x, z, w, setting = NUL
   mu.0 <- exp((x + w.full) %*% beta)
   mu.1 <- x %*% beta
   
-  omega <- mean(mu.1[z == 0] - mu.0[z == 0]) - 4
+  omega <- if (identical(overlap, TRUE))
+    mean(mu.1[z == 1] - mu.0[z == 1]) - 4
+  else
+    mean(mu.1[z == 0] - mu.0[z == 0]) - 4
   mu.1 <- mu.1 - omega
   y.0 <- rnorm(n, mu.0, sigma.y)
   y.1 <- rnorm(n, mu.1, sigma.y)

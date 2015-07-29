@@ -10,8 +10,8 @@ ci.fit <- function(y, x, z, method, estimand, prob.z = NULL, ...) {
            atc = ifelse(z, (1 - prob.z) / prob.z, 1))
 
   fit <- switch(method,
-                naive1 = fitNaive1(y, x, z, w.est),
-                naive2 = fitNaive2(y, x, z, w.est),
+                naive1 = fitNaive1(y, x, z),
+                naive2 = fitNaive2(y, x, z),
                 bart   = fitBart(y, x, z, weights = w.est, ...))
 }
 
@@ -46,10 +46,9 @@ ci.estimate <- function(y, x, z, method, estimand, prob.z = NULL, ...) {
       sign <- -1
     }
     
-    numSamples <- if (is.null(matchedCall$ndpost)) formals(predict.bartSampler)$ndpost else NULL
+    numSamples <- if (is.null(matchedCall$ndpost)) formals(predict.bartSampler)$ndpost else matchedCall$ndpost 
     
     pred <- predict(fit, x.test, z.test, ndpost = numSamples, keeptrainfits = TRUE, summarize = FALSE)
-    
     return((pred$train[train.ind,] - pred$test) * sign)
   
   } else if (identical(method, "naive1")) {

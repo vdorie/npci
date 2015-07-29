@@ -15,7 +15,7 @@ source("data.R")
 x <- as.matrix(x)
 w <- rep(0.5, ncol(x))
 
-generateDataForIterInCurrentEnvironment(166L, x, z, w)
+generateDataForIterInCurrentEnvironment(166L, x, z, w, overlap = FALSE)
 
 fitsFile <- file.path("data", "compFits.RData")
 if (file.exists(fitsFile)) {
