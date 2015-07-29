@@ -46,7 +46,7 @@ collateResults <- function(method, overlap = TRUE, covariates = "full", dir = ".
     }
   }
   
-  naRows <- apply(results, 1, function(row) any(is.na(row)))
+  naRows <- apply(results.t, 1, function(row) any(is.na(row)))
   results.t <- results.t[!naRows,]
   
   results.t
