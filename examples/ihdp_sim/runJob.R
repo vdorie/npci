@@ -21,6 +21,15 @@ results <- matrix(NA, numReps, 6L)
 
 colnames(results) <- 
   c("bias", "cov", "cil", "wrong", "tau.est", "precision")
+opt <- list()
+L <- list()
+x.0 <- list()
+opt.0 <- list()
+L.0 <- list()
+x.0.0 <- list()
+opt.1 <- list()
+L.1 <- list()
+x.0.1 <- list()
 
 source("data.R")
 
@@ -75,16 +84,55 @@ for (i in seq_len(numReps)) {
   } else if (method %in% c("naive1", "naive2")) {
     est <- ci.estimate(y, x.r, z, method = method, estimand = estimand)
     te <- mean(est$te)
-    se  <- atc$se
+    se  <- est$se
     results[i,"bias"] <- 4 - te
-    ci <- est + se * qnorm(c(0.025, 0.975))
+    ci <- te + se * qnorm(c(0.025, 0.975))
     results[i,"cov"] <- if (ci[1L] < 4 && ci[2L] > 4) 1 else 0
     results[i,"cil"] <- ci[2L] - ci[1L]
     results[i,"wrong"] <- if (ci[1L] < 0 && ci[2L] > 0) 1 else 0
     results[i,"precision"] <- sqrt(mean((est$te - meanEffects)^2))
+  } else if (identical(method, "grouped")) {
+    est <- ci.estimate(y, x.r, z, method = method, estimand = estimand)
+    te <- mean(est$te)
+    se  <- est$se
+    results[i,"bias"] <- 4 - te
+    ci <- te + se * qnorm(c(0.025, 0.975))
+    results[i,"cov"] <- if (ci[1L] < 4 && ci[2L] > 4) 1 else 0
+    results[i,"cil"] <- ci[2L] - ci[1L]
+    results[i,"wrong"] <- if (ci[1L] < 0 && ci[2L] > 0) 1 else 0
+    results[i,"precision"] <- sqrt(mean((est$te - meanEffects)^2))
+    
+    opt[[i]] <- est$fit@env$opt
+    devEnv <- environment(est$fit@deviance)
+    L[[i]]   <- environment(devEnv$transformPars)$L
+    x.0[[i]] <- environment(devEnv$transformPars)$x.0
+  } else if (identical(method, "independent")) {
+    est <- ci.estimate(y, x.r, z, method = method, estimand = estimand)
+    te <- mean(est$te)
+    se  <- est$se
+    results[i,"bias"] <- 4 - te
+    ci <- te + se * qnorm(c(0.025, 0.975))
+    results[i,"cov"] <- if (ci[1L] < 4 && ci[2L] > 4) 1 else 0
+    results[i,"cil"] <- ci[2L] - ci[1L]
+    results[i,"wrong"] <- if (ci[1L] < 0 && ci[2L] > 0) 1 else 0
+    results[i,"precision"] <- sqrt(mean((est$te - meanEffects)^2))
+    
+    opt.0[[i]] <- est$fit@env$opt.0
+    opt.1[[i]] <- est$fit@env$opt.1
+    devEnv <- environment(est$fit@deviance)
+    L.0[[i]]   <- environment(devEnv$transformPars.0)$L
+    L.1[[i]]   <- environment(devEnv$transformPars.1)$L
+    x.0.0[[i]] <- environment(devEnv$transformPars.0)$x.0
+    x.0.1[[i]] <- environment(devEnv$transformPars.1)$x.0
   } else {
     stop("method '", method, "' unrecognized")
   }
 }
 
-save(results, file = resultsFile)
+if (identical(method, "grouped")) {
+  save(results, opt, L, x.0, file = resultsFile)
+} else if (identical(method, "independent")) {
+  save(results, opt.0, opt.1, L.0, L.1, x.0.0, x.0.1, file = resultsFile)
+} else {
+  save(results, file = resultsFile)
+}

@@ -5,10 +5,16 @@ if (require(npci, quietly = TRUE) == FALSE)
 
 totalNumReps <- 250L
 
-methods <- c("bart", "naive1", "naive2")
-numRepsPerProcess <- c(250L, 5L, 10L)
-overlap <- c(TRUE, FALSE)
-covariates <- c("full", "reduced")
+#methods <- c("bart", "naive1", "naive2")
+#numRepsPerProcess <- c(250L, 5L, 10L)
+#overlap <- c(TRUE, FALSE)
+#covariates <- c("full", "reduced")
+
+methods <- "grouped"
+numRepsPerProcess <- 5L
+overlap <- TRUE
+covariates <- "full"
+
 verbose <- TRUE
 
 if (!dir.exists("jobs")) dir.create("jobs")

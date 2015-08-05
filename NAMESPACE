@@ -1,3 +1,5 @@
+useDynLib(npci, .registration = TRUE, .fixes = "C_")
+
 export(ci.fit)
 export(ci.estimate)
 
@@ -6,8 +8,13 @@ S3method(fitted, naive1)
 S3method(predict, naive2)
 S3method(fitted, naive2)
 S3method(predict, bartSampler)
+S3method(predict, gpci.grouped)
+S3method(predict, gpci.independent)
 
-importFrom(stats, quantile, lm, predict, sd, setNames)
+importFrom(stats, quantile, lm, predict, sd, setNames, kmeans, optim)
+importFrom(methods, new, setClass, setMethod, is)
 
 importFrom(mlegp, mlegp)
 importFrom(dbarts, dbarts, dbartsControl)
+importFrom(rstan, stan, extract)
+importFrom(Rcpp, cpp_object_initializer)

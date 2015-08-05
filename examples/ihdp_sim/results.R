@@ -52,6 +52,11 @@ collateResults <- function(method, overlap = TRUE, covariates = "full", dir = ".
   results.t
 }
 
+tableResults <- function(results)
+{
+  c(apply(results, 2, mean), rmse = sqrt(mean(results[,"bias"]^2)))
+}
+
 getResultIntervals <- function(method, overlap = TRUE, covariates = "full", dir = ".")
 {
   prefix <- getPrefix(method, overlap, covariates)

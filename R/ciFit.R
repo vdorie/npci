@@ -12,7 +12,22 @@ ci.fit <- function(y, x, z, method, estimand, prob.z = NULL, ...) {
   fit <- switch(method,
                 naive1 = fitNaive1(y, x, z),
                 naive2 = fitNaive2(y, x, z),
-                bart   = fitBart(y, x, z, weights = w.est, ...))
+                bart   = fitBart(y, x, z, weights = w.est, ...),
+                grouped = {
+                  verbose <- if (is.null(verbose <- list(...)$verbose)) FALSE else verbose
+                  m <- new("gpci.grouped", y, x, z)
+                  optimize.gpci.grouped(m, verbose = verbose)
+                  # sample.gpci.grouped(m, verbose = verbose)
+                  m
+               },
+               independent = {
+                 verbose <- if (is.null(verbose <- list(...)$verbose)) FALSE else verbose
+                 m <- new("gpci.independent", y, x, z)
+                 optimize.gpci.independent(m, verbose = verbose)
+                  # sample.gpci.independent(m, verbose = verbose)
+                 m
+               }
+  )
 }
 
 
@@ -65,13 +80,13 @@ ci.estimate <- function(y, x, z, method, estimand, prob.z = NULL, ...) {
       z.test <- c(rep(1, NROW(temp)), rep(0, NROW(temp)))
     }
     
-    n <- NROW(x.test) %/% 2
+    n <- NROW(x.test) %/% 2L
     lin.comb <- 2 * z.test - 1
     
     pred <- predict(fit, x.test, z.test, "vcov")
     
-    te <- pred$fit[z.test] - pred$fit[!z.test]
-    se  <- sqrt(crossprod(lin.comb, pred$vcov) %*% lin.comb)[1] / n
+    te <- pred$fit[z.test == 1] - pred$fit[z.test == 0]
+    se <- sqrt(crossprod(lin.comb, pred$vcov) %*% lin.comb)[1] / n
     
     return(namedList(te, se))
     
@@ -94,5 +109,47 @@ ci.estimate <- function(y, x, z, method, estimand, prob.z = NULL, ...) {
     se <- sqrt(crossprod(lin.comb, pred.1$vcov) %*% lin.comb + crossprod(lin.comb, pred.0$vcov) %*% lin.comb)[1] / n
     
     return(namedList(te, se))
+  } else if (identical(method, "grouped")) {
+    if (identical(estimand, "ate")) {
+      x.test <- rbind(x, x)
+      z.test <- c(z, 1 - z)
+    } else if (identical(estimand, "att")) {
+      temp <- subset(x, z == 1)
+      x.test <- rbind(temp, temp)
+      z.test <- c(rep(1, NROW(temp)), rep(0, NROW(temp)))
+    } else if (identical(estimand, "atc")) {
+      temp <- subset(x, z == 0)
+      x.test <- rbind(temp, temp)
+      z.test <- c(rep(1, NROW(temp)), rep(0, NROW(temp)))
+    }
+    
+    n <- NROW(x.test) %/% 2L
+    lin.comb <- 2 * z.test - 1
+    
+    pred <- predict(fit, x.test, z.test, "vcov", pars = fit@env$opt[[1]]$par)
+    
+    te <- pred$fit[z.test == 1] - pred$fit[z.test == 0]
+    se <- sqrt(crossprod(lin.comb, pred$vcov) %*% lin.comb)[1] / n
+    
+    return(namedList(te, se, fit))
+  } else if (identical(method, "independent")) {
+    if (identical(estimand, "ate")) {
+      x.test <- x
+    } else if (identical(estimand, "att")) {
+      x.test <- subset(x, z == 1)
+    } else if (identical(estimand, "atc")) {
+      x.test <- subset(x, z == 0)
+    }
+    
+    n <- NROW(x.test)
+    lin.comb <- rep(1, n)
+    
+    pred.0 <- predict(fit, x.test, 0, "vcov")
+    pred.1 <- predict(fit, x.test, 1, "vcov")
+    
+    te <- pred.1$fit - pred.0$fit
+    se <- sqrt(crossprod(lin.comb, pred.1$vcov) %*% lin.comb + crossprod(lin.comb, pred.0$vcov) %*% lin.comb)[1] / n
+    
+    return(namedList(te, se, fit))
   }
 }
