@@ -79,7 +79,7 @@ optimize.gpci.grouped <- function(object, n.testPoints = c(50L, 15L), n.modes = 
   
   if (is.null(object@env$optStart)) {
     n.testPoints <- n.testPoints[1] + n.testPoints[2L] * n.covPars
-    testMins  <- c(0, rep(-3, n.covPars))
+    testMins  <- c(-10, rep(-3, n.covPars))
     testMaxes <- c(10, rep(3, n.covPars))  
     
     testPoints <- matrix(runif(n.testPoints * (n.covPars + 1L), testMins, testMaxes), n.testPoints, byrow = TRUE)

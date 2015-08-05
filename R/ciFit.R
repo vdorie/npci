@@ -144,8 +144,8 @@ ci.estimate <- function(y, x, z, method, estimand, prob.z = NULL, ...) {
     n <- NROW(x.test)
     lin.comb <- rep(1, n)
     
-    pred.0 <- predict(fit, x.test, 0, "vcov")
-    pred.1 <- predict(fit, x.test, 1, "vcov")
+    pred.0 <- predict(fit, x.test, 0, "vcov", pars = rbind(fit@env$opt.0[[1]]$par, fit@env$opt.1[[1]]$par))
+    pred.1 <- predict(fit, x.test, 1, "vcov", pars = rbind(fit@env$opt.0[[1]]$par, fit@env$opt.1[[1]]$par))
     
     te <- pred.1$fit - pred.0$fit
     se <- sqrt(crossprod(lin.comb, pred.1$vcov) %*% lin.comb + crossprod(lin.comb, pred.0$vcov) %*% lin.comb)[1] / n

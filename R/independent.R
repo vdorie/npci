@@ -112,7 +112,7 @@ optimize.gpci.independent <- function(object, n.testPoints = c(50L, 15L), n.mode
   devEnv <- environment(object@deviance.0)
   if (is.null(object@env$optStart.0)) {
     n.testPoints.0 <- n.testPoints[1] + n.testPoints[2L] * n.covPars
-    testMins  <- c(0, rep(-3, n.covPars))
+    testMins  <- c(-10, rep(-3, n.covPars))
     testMaxes <- c(10, rep(3, n.covPars))
     
     testPoints <- matrix(runif(n.testPoints.0 * (n.covPars + 1L), testMins, testMaxes), n.testPoints.0, byrow = TRUE)
@@ -136,7 +136,7 @@ optimize.gpci.independent <- function(object, n.testPoints = c(50L, 15L), n.mode
   }
   if (is.null(object@env$optStart.1)) {
     n.testPoints.1 <- n.testPoints[1] + n.testPoints[2L] * n.covPars
-    testMins  <- c(0, rep(-3, n.covPars))
+    testMins  <- c(-10, rep(-3, n.covPars))
     testMaxes <- c(10, rep(3, n.covPars))
     
     testPoints <- matrix(runif(n.testPoints.1 * (n.covPars + 1L), testMins, testMaxes), n.testPoints.1, byrow = TRUE)
@@ -427,7 +427,7 @@ predict.gpci.independent <- function(object, x, z, error = NULL, pars = "sampler
     sig_f.0_sq <- exp(origPars.0[1L])
     scales.0 <- exp(-0.5 * origPars.0[-1L])
     
-    dev.0 <- object@deviance.0(pars)
+    dev.0 <- object@deviance.0(origPars.0)
     mu.0.hat       <- attr(dev.0, "beta")
     sig_y.0_sq.hat <- attr(dev.0, "sig_y_sq")
     
@@ -452,8 +452,8 @@ predict.gpci.independent <- function(object, x, z, error = NULL, pars = "sampler
         se.pst.0 <-
           transform(.y = as.vector(sqrt(diag(vcov.pst.0))), trans = object@trans$scale, simplify = TRUE)
       } else if (error %in% c("var", "cov", "vcov")) {
-        vcov.pst.0 <- transform(.y = vcov.pst, trans = object@trans$scale)
-        vcov.pst.0 <- transform(.y = vcov.pst, trans = object@trans$scale)
+        vcov.pst.0 <- transform(.y = vcov.pst.0, trans = object@trans$scale)
+        vcov.pst.0 <- transform(.y = vcov.pst.0, trans = object@trans$scale)
       }
     }
   }
@@ -464,7 +464,7 @@ predict.gpci.independent <- function(object, x, z, error = NULL, pars = "sampler
     sig_f.1_sq <- exp(origPars.1[1L])
     scales.1 <- exp(-0.5 * origPars.1[-1L])
     
-    dev.1 <- object@deviance.1(pars)
+    dev.1 <- object@deviance.1(origPars.1)
     mu.1.hat       <- attr(dev.1, "beta")
     sig_y.1_sq.hat <- attr(dev.1, "sig_y_sq")
     
@@ -489,8 +489,8 @@ predict.gpci.independent <- function(object, x, z, error = NULL, pars = "sampler
         se.pst.1 <-
           transform(.y = as.vector(sqrt(diag(vcov.pst.1))), trans = object@trans$scale, simplify = TRUE)
       } else if (error %in% c("var", "cov", "vcov")) {
-        vcov.pst.1 <- transform(.y = vcov.pst, trans = object@trans$scale)
-        vcov.pst.1 <- transform(.y = vcov.pst, trans = object@trans$scale)
+        vcov.pst.1 <- transform(.y = vcov.pst.1, trans = object@trans$scale)
+        vcov.pst.1 <- transform(.y = vcov.pst.1, trans = object@trans$scale)
       }
     }
   }
