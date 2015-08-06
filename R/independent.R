@@ -63,7 +63,8 @@ deviance.0.gpci.independent <- function(pars)
   cholResult <- .Call(npci:::C_npci_grouped_updateLeftFactor, object@L.0, object@K.0)
   if (cholResult != 0L) return(.Machine$double.xmax * .Machine$double.eps^2)
   
-  xr <- solve(object@L.0, rep(1, n.0))
+  tryResult <- tryCatch(xr <- solve(object@L.0, rep(1, n.0)), error = function(e) e)
+  if (is(tryResult, "error")) return(.Machine$double.xmax * .Machine$double.eps^2) 
   xtx <- crossprod(xr)
   mu.0 <- solve(xtx, crossprod(xr, solve(object@L.0, object@data$y.0)))[1]
   
@@ -90,7 +91,8 @@ deviance.1.gpci.independent <- function(pars)
   cholResult <- .Call(npci:::C_npci_grouped_updateLeftFactor, object@L.1, object@K.1)
   if (cholResult != 0L) return(.Machine$double.xmax * .Machine$double.eps^2)
 
-  xr <- solve(object@L.1, rep(1, n.1))
+  tryResult <- tryCatch(xr <- solve(object@L.1, rep(1, n.1)), error = function(e) e)
+  if (is(tryResult, "error")) return(.Machine$double.xmax * .Machine$double.eps^2) 
   xtx <- crossprod(xr)
   mu.1 <- solve(xtx, crossprod(xr, solve(object@L.1, object@data$y.1)))[1]
 
