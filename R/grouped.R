@@ -56,7 +56,8 @@ deviance.gpci.grouped <- function(pars)
   #(X'Sigma^-1X)^-1 X'Sigma^-1y
   #Sigma = LL', Sigma^-1 = L'^-1 L^-1
   #(X'L'^-1 L^-1 X)^-1 X'L'^-1 L^-1 y
-  xr <- solve(object@L, object@data$x.mean)
+  tryResult <- tryCatch(xr <- solve(object@L, object@data$x.mean), error = function(e) e)
+  if (methods::is(tryResult, "error")) return(.Machine$double.xmax * .Machine$double.eps^2)
   xtx <- crossprod(xr)
   
   beta.hat <- solve(xtx, crossprod(xr, solve(object@L, object@data$y)))
