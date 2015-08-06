@@ -427,7 +427,7 @@ predict.gpci.independent <- function(object, x, z, error = NULL, pars = "sampler
     sig_f.0_sq <- exp(origPars.0[1L])
     scales.0 <- exp(-0.5 * origPars.0[-1L])
     
-    dev.0 <- object@deviance.0(origPars.0)
+    dev.0 <- object@deviance.0(pars[1,])
     mu.0.hat       <- attr(dev.0, "beta")
     sig_y.0_sq.hat <- attr(dev.0, "sig_y_sq")
     
@@ -464,7 +464,7 @@ predict.gpci.independent <- function(object, x, z, error = NULL, pars = "sampler
     sig_f.1_sq <- exp(origPars.1[1L])
     scales.1 <- exp(-0.5 * origPars.1[-1L])
     
-    dev.1 <- object@deviance.1(origPars.1)
+    dev.1 <- object@deviance.1(pars[2,])
     mu.1.hat       <- attr(dev.1, "beta")
     sig_y.1_sq.hat <- attr(dev.1, "sig_y_sq")
     

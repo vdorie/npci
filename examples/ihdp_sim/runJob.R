@@ -92,7 +92,7 @@ for (i in seq_len(numReps)) {
     results[i,"wrong"] <- if (ci[1L] < 0 && ci[2L] > 0) 1 else 0
     results[i,"precision"] <- sqrt(mean((est$te - meanEffects)^2))
   } else if (identical(method, "grouped")) {
-    est <- ci.estimate(y, x.r, z, method = method, estimand = estimand)
+    est <- ci.estimate(y, x.r, z, method = method, estimand = estimand, verbose = verbose)
     te <- mean(est$te)
     se  <- est$se
     results[i,"bias"] <- 4 - te
@@ -107,7 +107,7 @@ for (i in seq_len(numReps)) {
     L[[i]]   <- environment(devEnv$transformPars)$L
     x.0[[i]] <- environment(devEnv$transformPars)$x.0
   } else if (identical(method, "independent")) {
-    est <- ci.estimate(y, x.r, z, method = method, estimand = estimand)
+    est <- ci.estimate(y, x.r, z, method = method, estimand = estimand, verbose = verbose)
     te <- mean(est$te)
     se  <- est$se
     results[i,"bias"] <- 4 - te
@@ -119,7 +119,7 @@ for (i in seq_len(numReps)) {
     
     opt.0[[i]] <- est$fit@env$opt.0
     opt.1[[i]] <- est$fit@env$opt.1
-    devEnv <- environment(est$fit@deviance)
+    devEnv <- environment(est$fit@deviance.0)
     L.0[[i]]   <- environment(devEnv$transformPars.0)$L
     L.1[[i]]   <- environment(devEnv$transformPars.1)$L
     x.0.0[[i]] <- environment(devEnv$transformPars.0)$x.0

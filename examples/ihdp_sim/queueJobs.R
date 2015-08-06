@@ -53,9 +53,9 @@ for (i in seq_along(methods)) {
           
           end <- start + numReps[m] - 1L
                 
-          args <- paste0("'s/method/", methods[i], "/;s/overlap/", if (overlap[j]) "true" else "false",
-                         "/;s/covariates/", covariates[k], "/;s/verbose/", if (verbose) "true" else "false",
-                         "/;s/jobname/", jobName, "/;s/start/", start, "/;s/end/", end, "/'")
+          args <- paste0("'s/_METHOD_/", methods[i], "/;s/_OVERLAP_/", if (overlap[j]) "true" else "false",
+                         "/;s/_COVARIATES_/", covariates[k], "/;s/_VERBOSE_/", if (verbose) "true" else "false",
+                         "/;s/_JOBNAME_/", jobName, "/;s/_START_/", start, "/;s/_END_/", end, "/'")
           system2("sed", args,
                   stdout = paste0("jobs/", jobName, ".q"),
                   stdin  = "template.q")
