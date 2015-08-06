@@ -92,8 +92,8 @@ plotFit <- function(y, x, z, yValues, xValues, yRange, main)
        main = main)
   
   if (is.null(yValues$y.hat.0)) {
-    lines(xValues, yValues$y.0)
-    lines(xValues, yValues$y.1, col = "gray")
+    lines(xValues, yValues$y.0, col = "gray")
+    lines(xValues, yValues$y.1)
     points(x, y, col = ifelse(z == 1, "black", "gray"), pch = 20)
   } else {
     poly.x <- cbind(xValues, rev(xValues))

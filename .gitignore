@@ -1,5 +1,7 @@
 .DS_Store
 examples/ihdp_sim/data/naive*
 examples/ihdp_sim/data/bart*
+examples/ihdp_sim/data/grouped*
+examples/ihdp_sim/data/indep*
 examples/ihdp_sim/data/compFits.RData
 *.swp

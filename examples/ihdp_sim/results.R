@@ -7,6 +7,11 @@ collateResults <- function(method, overlap = TRUE, covariates = "full", dir = ".
   prefix <- getPrefix(method, overlap, covariates)
   
   files <- list.files(file.path(dir, "data"), paste0(prefix, "_[0-9]+"))
+  if (length(files) == 0) {
+    results <- matrix(NA_real_, 0, 6L)
+    colnames(results) <- c("bias", "cov", "cil", "wrong", "tau.est", "precision")
+    return(results)
+  }
   
   temp <- sapply(strsplit(files, "\\."), function(x) x[1L])
   temp <- sapply(strsplit(temp, "_"), function(x) as.integer(x[c(length(x) - 1L, length(x))]))
