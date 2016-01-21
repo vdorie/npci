@@ -108,6 +108,23 @@ plotFit <- function(y, x, z, yValues, xValues, yRange, main)
   }
 }
 
+toyData <- generateToyData()
+  attach(toyData)
+  
+  xValues <- getPlotXValues(x)
+
+  yValues.truth <- getPlotYValues(y, x, z, f0, f1, xValues, "truth")
+  yValues.bart  <- getPlotYValues(y, x, z, f0, f1, xValues, "bart")
+  yValues.group <- getPlotYValues(y, x, z, f0, f1, xValues, "grouped")
+  yValues.indep <- getPlotYValues(y, x, z, f0, f1, xValues, "independent")
+
+  yRange <- range(yValues.truth$y.0, yValues.truth$y.1,
+                  yValues.bart$y.hat.0, yValues.bart$y.hat.1,
+                  yValues.group$y.hat.0, yValues.group$y.hat.1,
+                  yValues.indep$y.hat.0, yValues.indep$y.hat.1)
+  yRange <- 1.02 * (yRange - mean(yRange)) + mean(yRange)
+
+
 generatePlots <- function(path = ".") {
   toyData <- generateToyData()
   attach(toyData)

@@ -58,9 +58,9 @@ deviance.0.gpci.independent <- function(pars)
   scales.0 <- exp(-0.5 * pars[-1L])
   
   n.0 <- sum(object@data$z == 0)
-  .Call(npci:::C_npci_grouped_updateCovMatrix, object@K.0, object@data$xt.0, object@data$xt.0, scales.0, sig_f.0_sq)
+  .Call(npci:::C_npci_squaredExponential_updateCovMatrix, object@K.0, object@data$xt.0, object@data$xt.0, scales.0, sig_f.0_sq)
   
-  cholResult <- .Call(npci:::C_npci_grouped_updateLeftFactor, object@L.0, object@K.0)
+  cholResult <- .Call(npci:::C_npci_updateLeftFactor, object@L.0, object@K.0)
   if (cholResult != 0L) return(.Machine$double.xmax * .Machine$double.eps^2)
   
   tryResult <- tryCatch(xr <- solve(object@L.0, rep(1, n.0)), error = function(e) e)
@@ -86,9 +86,9 @@ deviance.1.gpci.independent <- function(pars)
   scales.1 <- exp(-0.5 * pars[-1L])
   
   n.1 <- sum(object@data$z == 1)
-  .Call(npci:::C_npci_grouped_updateCovMatrix, object@K.1, object@data$xt.1, object@data$xt.1, scales.1, sig_f.1_sq)
+  .Call(npci:::C_npci_squaredExponential_updateCovMatrix, object@K.1, object@data$xt.1, object@data$xt.1, scales.1, sig_f.1_sq)
   
-  cholResult <- .Call(npci:::C_npci_grouped_updateLeftFactor, object@L.1, object@K.1)
+  cholResult <- .Call(npci:::C_npci_updateLeftFactor, object@L.1, object@K.1)
   if (cholResult != 0L) return(.Machine$double.xmax * .Machine$double.eps^2)
 
   tryResult <- tryCatch(xr <- solve(object@L.1, rep(1, n.1)), error = function(e) e)
@@ -323,18 +323,18 @@ predict.gpci.independent <- function(object, x, z, error = NULL, pars = "sampler
       
       pst.0 <- lapply(seq_len(nrow(origPars)), function(i) {
         scales <- exp(-0.5 * origPars[i,])
-        .Call(C_npci_grouped_updateCovMatrix, object@K.0, object@data$xt.0, object@data$xt.0, scales, sig_f.0_sq)
+        .Call(C_npci_squaredExponential_updateCovMatrix, object@K.0, object@data$xt.0, object@data$xt.0, scales, sig_f.0_sq)
         
-        .Call(C_npci_grouped_updateCovMatrix, KJ, object@data$xt.0, xt.0, scales, sig_f.0_sq)
+        .Call(C_npci_squaredExponential_updateCovMatrix, KJ, object@data$xt.0, xt.0, scales, sig_f.0_sq)
         
-        .Call(C_npci_grouped_updateLeftFactor, object@L.0, object@K.0)
+        .Call(C_npci_updateLeftFactor, object@L.0, object@K.0)
         LKJ <- solve(object@L.0, KJ)
         mu.pst <- transform(.y = as.vector(mu[i] + crossprod(LKJ, solve(object@L.0, object@data$y.0 - mu[i]))),
                             trans = object@trans$inverse, simplify = TRUE)
         
         if (is.null(error)) return(mu.pst)
         
-        .Call(C_npci_grouped_updateCovMatrix, J, xt.0, xt.0, scales, sig_f.0_sq)
+        .Call(C_npci_squaredExponential_updateCovMatrix, J, xt.0, xt.0, scales, sig_f.0_sq)
         vcov.pst <- sig_y.0_sq[i] * (J - crossprod(LKJ))
         if (identical(error, "ppd")) vcov.pst <- vcov.pst + diag(sig_y.0_sq[i], ncol(J))
         
@@ -366,18 +366,18 @@ predict.gpci.independent <- function(object, x, z, error = NULL, pars = "sampler
       
       pst.1 <- lapply(seq_len(nrow(origPars)), function(i) {
         scales <- exp(-0.5 * origPars[i,])
-        .Call(C_npci_grouped_updateCovMatrix, object@K.1, object@data$xt.1, object@data$xt.1, scales, sig_f.1_sq)
+        .Call(C_npci_squaredExponential_updateCovMatrix, object@K.1, object@data$xt.1, object@data$xt.1, scales, sig_f.1_sq)
         
-        .Call(C_npci_grouped_updateCovMatrix, KJ, object@data$xt.1, xt.1, scales, sig_f.1_sq)
+        .Call(C_npci_squaredExponential_updateCovMatrix, KJ, object@data$xt.1, xt.1, scales, sig_f.1_sq)
         
-        .Call(C_npci_grouped_updateLeftFactor, object@L.1, object@K.1)
+        .Call(C_npci_updateLeftFactor, object@L.1, object@K.1)
         LKJ <- solve(object@L.1, KJ)
         mu.pst <- transform(.y = as.vector(mu[i] + crossprod(LKJ, solve(object@L.1, object@data$y.1 - mu[i]))),
                             trans = object@trans$inverse, simplify = TRUE)
         
         if (is.null(error)) return(mu.pst)
         
-        .Call(C_npci_grouped_updateCovMatrix, J, xt.1, xt.1, scales, sig_f.1_sq)
+        .Call(C_npci_squaredExponential_updateCovMatrix, J, xt.1, xt.1, scales, sig_f.1_sq)
         vcov.pst <- sig_y.1_sq[i] * (J - crossprod(LKJ))
         if (identical(error, "ppd")) vcov.pst <- vcov.pst + diag(sig_y.1_sq[i], ncol(J))
         
@@ -434,12 +434,12 @@ predict.gpci.independent <- function(object, x, z, error = NULL, pars = "sampler
     sig_y.0_sq.hat <- attr(dev.0, "sig_y_sq")
     
     
-    .Call(C_npci_grouped_updateCovMatrix, object@K.0, object@data$xt.0, object@data$xt.0, scales.0, sig_f.0_sq)
+    .Call(C_npci_squaredExponential_updateCovMatrix, object@K.0, object@data$xt.0, object@data$xt.0, scales.0, sig_f.0_sq)
     
     KJ <- matrix(NA_real_, ncol(object@data$xt.0), ncol(xt.0))
-    .Call(C_npci_grouped_updateCovMatrix, KJ, object@data$xt.0, xt.0, scales.0, sig_f.0_sq)
+    .Call(C_npci_squaredExponential_updateCovMatrix, KJ, object@data$xt.0, xt.0, scales.0, sig_f.0_sq)
     
-    .Call(C_npci_grouped_updateLeftFactor, object@L.0, object@K.0)
+    .Call(C_npci_updateLeftFactor, object@L.0, object@K.0)
     LKJ <- solve(object@L.0, KJ)
     mu.pst.0 <- 
       transform(.y = as.vector(mu.0.hat + crossprod(LKJ, solve(object@L.0, object@data$y.0 - mu.0.hat))),
@@ -447,7 +447,7 @@ predict.gpci.independent <- function(object, x, z, error = NULL, pars = "sampler
     
     if (!is.null(error)) {
       J  <- matrix(NA_real_, ncol(xt.0), ncol(xt.0))
-      .Call(C_npci_grouped_updateCovMatrix, J, xt.0, xt.0, scales.0, sig_f.0_sq)
+      .Call(C_npci_squaredExponential_updateCovMatrix, J, xt.0, xt.0, scales.0, sig_f.0_sq)
       vcov.pst.0 <- sig_y.0_sq.hat * (J - crossprod(LKJ))
       
       if (error %in% c("sd", "se")) {
@@ -471,12 +471,12 @@ predict.gpci.independent <- function(object, x, z, error = NULL, pars = "sampler
     sig_y.1_sq.hat <- attr(dev.1, "sig_y_sq")
     
     
-    .Call(C_npci_grouped_updateCovMatrix, object@K.1, object@data$xt.1, object@data$xt.1, scales.1, sig_f.1_sq)
+    .Call(C_npci_squaredExponential_updateCovMatrix, object@K.1, object@data$xt.1, object@data$xt.1, scales.1, sig_f.1_sq)
     
     KJ <- matrix(NA_real_, ncol(object@data$xt.1), ncol(xt.1))
-    .Call(C_npci_grouped_updateCovMatrix, KJ, object@data$xt.1, xt.1, scales.1, sig_f.1_sq)
+    .Call(C_npci_squaredExponential_updateCovMatrix, KJ, object@data$xt.1, xt.1, scales.1, sig_f.1_sq)
     
-    .Call(C_npci_grouped_updateLeftFactor, object@L.1, object@K.1)
+    .Call(C_npci_updateLeftFactor, object@L.1, object@K.1)
     LKJ <- solve(object@L.1, KJ)
     mu.pst.1 <- 
       transform(.y = as.vector(mu.1.hat + crossprod(LKJ, solve(object@L.1, object@data$y.1 - mu.1.hat))),
@@ -484,7 +484,7 @@ predict.gpci.independent <- function(object, x, z, error = NULL, pars = "sampler
     
     if (!is.null(error)) {
       J  <- matrix(NA_real_, ncol(xt.1), ncol(xt.1))
-      .Call(C_npci_grouped_updateCovMatrix, J, xt.1, xt.1, scales.1, sig_f.1_sq)
+      .Call(C_npci_squaredExponential_updateCovMatrix, J, xt.1, xt.1, scales.1, sig_f.1_sq)
       vcov.pst.1 <- sig_y.1_sq.hat * (J - crossprod(LKJ))
       
       if (error %in% c("sd", "se")) {

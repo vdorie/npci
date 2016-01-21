@@ -1,10 +1,13 @@
-getPrefix <- function(method, overlap = TRUE, covariates = "full") {
-  paste0(method, "_", if (overlap) "overlap" else "nonoverlap", "_", if (identical(covariates, "reduced")) "reduced" else "full")
+getPrefix <- function(method, overlap = TRUE, covariates = "select", setting = "A", p.score = FALSE) {
+  pre <- paste0(method, "_", if (overlap) "overlap" else "nonoverlap", "_")
+  pre <- paste0(pre, if (is.null(covariates)) "select" else covariates, "_")
+  pre <- paste0(pre, setting, if (p.score) "_p" else "")
+  pre
 }
 
 ## point to directory above "data" dir/root of sim folder
-collateResults <- function(method, overlap = TRUE, covariates = "full", dir = ".", consolidate = FALSE) {
-  prefix <- getPrefix(method, overlap, covariates)
+collateResults <- function(method, overlap = TRUE, covariates = "select", setting = "A", p.score = FALSE, dir = ".", consolidate = FALSE) {
+  prefix <- getPrefix(method, overlap, covariates, setting, p.score)
   
   files <- list.files(file.path(dir, "data"), paste0(prefix, "_[0-9]+"))
   if (length(files) == 0) {
@@ -62,9 +65,9 @@ tableResults <- function(results)
   c(apply(results, 2, mean), rmse = sqrt(mean(results[,"bias"]^2)))
 }
 
-getResultIntervals <- function(method, overlap = TRUE, covariates = "full", dir = ".")
+getResultIntervals <- function(method, overlap = TRUE, covariates = "select", setting = "A", p.score = FALSE, dir = ".")
 {
-  prefix <- getPrefix(method, overlap, covariates)
+  prefix <- getPrefix(method, overlap, covariates, setting, p.score)
   files <- list.files(file.path(dir, "data"), paste0(prefix, "_[0-9]+"))
   
   resultNames <- list(NULL, c("start", "end"))
