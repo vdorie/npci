@@ -153,12 +153,38 @@ generateDataForIterInCurrentEnvironment <- function(iter, x, z, w, overlap = TRU
   }
   
   if (setting == "C") {
-    gamma <- sample(c(0.0, 0.1, 0.2), ncol(x.m), replace = TRUE, rep(1.0 / 3.0, 3))
+    ## old
+    ## gamma <- sample(c(0,.1,.2), ncol(XXXmat), replace=TRUE, c(1/3,1/3,1/3))
+    ## ps.z <- invlogit(ps.z %*% gamma - sqrt(ncol(ps.z)) * 5.7 / sqrt(303))
+    
+    mainEffects <- colnames(x)
+    mainEffectColumns <- sample(ncol(x), max(4 * sqrt(ncol(x)) / sqrt(25), 2))
+    mainEffects <- mainEffects[mainEffectColumns]
+    x.p <- x[,mainEffectColumns]
+    quadEffects <- getQuadraticTerms(x.p)
+    quadEffects <- quadEffects[sample(length(quadEffects), min(max(5 * sqrt(ncol(x.p)) / sqrt(16), 2), length(quadEffects)))]
+    
+    formulaString <- paste0("y ~ ",
+                            paste0(mainEffects, collapse = " + "),
+                            " + ",
+                            paste0(quadEffects, collapse = " + "))
+    
+    temp <- x
+    temp$y <- numeric(nrow(x))
+    mod <- glm(formulaString, data = temp, x = TRUE)
+    coefs <- mod$coef[-1L]
+    x.p <- mod$x[,-1L]
+    x.p <- x.p[,!is.na(coefs)]
+    
     invlogit <- function(x) { e.x <- exp(x); e.x / (1.0 + e.x) }
     
-    ps.z <- invlogit(x.m %*% gamma - sqrt(ncol(x.m)) * 0.1 * 5.7 / sqrt(303))
+    gamma <- runif(ncol(x.p), -0.5, 0.5)
+    lin.pred <- x.p %*% gamma
+    lin.pred <- lin.pred - median(lin.pred) - 1.35
+    ps.z <- invlogit(lin.pred)
     
     z <- rbinom(n, 1, ps.z)
+    if (all(z == 1) || all(z == 0)) browser()
     callingEnv$ps.z <- ps.z
   }
     
@@ -176,17 +202,20 @@ generateDataForIterInCurrentEnvironment <- function(iter, x, z, w, overlap = TRU
   y.1 <- rnorm(n, mu.1, sigma.y)
   y <- ifelse(z == 1, y.1, y.0)
   
-  f.0 <- function(x) exp((x + w) %*% beta)
-  f.1 <- function(x) x %*% beta - omega
-  environment(f.0) <- npci:::args2env(baseenv(), w = c(0, w), beta, omega)
-  environment(f.1) <- environment(f.0)
-  
+  if (setting == "A") {
+    f.0 <- function(x) exp((x + w) %*% beta)
+    f.1 <- function(x) x %*% beta - omega
+    environment(f.0) <- npci:::args2env(baseenv(), w = c(0, w), beta, omega)
+    environment(f.1) <- environment(f.0)
+    
+    callingEnv$f.0  <- f.0
+    callingEnv$f.1  <- f.1
+  }
+   
   callingEnv$mu.0 <- mu.0
   callingEnv$mu.1 <- mu.1
   callingEnv$y.0  <- y.0
   callingEnv$y.1  <- y.1
   callingEnv$y    <- y
-  callingEnv$f.0  <- f.0
-  callingEnv$f.1  <- f.1
   invisible(NULL)
 }
