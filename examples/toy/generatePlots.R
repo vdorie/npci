@@ -80,6 +80,18 @@ getPlotYValues <- function(y, x, z, f0, f1, xValues, method, estimand = NULL, pr
     
     poly.y.0 <- cbind(y.hat.0 - se.0 * qnorm(0.975), rev(y.hat.0 + se.0 * qnorm(0.975)))
     poly.y.1 <- cbind(y.hat.1 - se.1 * qnorm(0.975), rev(y.hat.1 + se.1 * qnorm(0.975)))
+  } else if (method == "btgp") {
+    pred.0 <- predict(fit, xValues, 0, pred.n = FALSE)
+    pred.1 <- predict(fit, xValues, 1, pred.n = FALSE)
+    
+    y.hat.0 <- pred.0$fit
+    y.hat.1 <- pred.1$fit
+    
+    se.0    <- sqrt(diag(pred.0$vcov))
+    se.1    <- sqrt(diag(pred.1$vcov))
+    
+    poly.y.0 <- cbind(y.hat.0 - se.0 * qnorm(0.975), rev(y.hat.0 + se.0 * qnorm(0.975)))
+    poly.y.1 <- cbind(y.hat.1 - se.1 * qnorm(0.975), rev(y.hat.1 + se.1 * qnorm(0.975)))
   }
   
   list(y.0 = f0(xValues), y.hat.0 = y.hat.0, y.1 = f1(xValues), y.hat.1 = y.hat.1, poly.y.0 = poly.y.0, poly.y.1 = poly.y.1)
@@ -108,23 +120,6 @@ plotFit <- function(y, x, z, yValues, xValues, yRange, main)
   }
 }
 
-toyData <- generateToyData()
-  attach(toyData)
-  
-  xValues <- getPlotXValues(x)
-
-  yValues.truth <- getPlotYValues(y, x, z, f0, f1, xValues, "truth")
-  yValues.bart  <- getPlotYValues(y, x, z, f0, f1, xValues, "bart")
-  yValues.group <- getPlotYValues(y, x, z, f0, f1, xValues, "grouped")
-  yValues.indep <- getPlotYValues(y, x, z, f0, f1, xValues, "independent")
-
-  yRange <- range(yValues.truth$y.0, yValues.truth$y.1,
-                  yValues.bart$y.hat.0, yValues.bart$y.hat.1,
-                  yValues.group$y.hat.0, yValues.group$y.hat.1,
-                  yValues.indep$y.hat.0, yValues.indep$y.hat.1)
-  yRange <- 1.02 * (yRange - mean(yRange)) + mean(yRange)
-
-
 generatePlots <- function(path = ".") {
   toyData <- generateToyData()
   attach(toyData)
@@ -135,11 +130,13 @@ generatePlots <- function(path = ".") {
   yValues.bart  <- getPlotYValues(y, x, z, f0, f1, xValues, "bart")
   yValues.group <- getPlotYValues(y, x, z, f0, f1, xValues, "grouped")
   yValues.indep <- getPlotYValues(y, x, z, f0, f1, xValues, "independent")
+  yValues.btgp  <- getPlotYValues(y, x, z, f0, f1, xValues, "btgp")
 
   yRange <- range(yValues.truth$y.0, yValues.truth$y.1,
                   yValues.bart$y.hat.0, yValues.bart$y.hat.1,
                   yValues.group$y.hat.0, yValues.group$y.hat.1,
-                  yValues.indep$y.hat.0, yValues.indep$y.hat.1)
+                  yValues.indep$y.hat.0, yValues.indep$y.hat.1,
+                  yValues.btgp$y.hat.0, yValues.btgp%y.hat.1)
   yRange <- 1.02 * (yRange - mean(yRange)) + mean(yRange)
 
   
@@ -157,6 +154,10 @@ generatePlots <- function(path = ".") {
   
   pdf(file.path(path, "toy_independent.pdf"), 3.5, 3.5)
   plotFit(y, x, z, yValues.indep, xValues, yRange, "GP-Independent")
+  dev.off()
+  
+  pdf(file.path(path, "toy_btgp"), 3.5, 3.5)
+  plotFit(y, x, z, yValues.btgp, xValues, yRange, "BTGP")
   dev.off()
   
   detach(toyData)

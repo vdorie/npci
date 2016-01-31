@@ -1,4 +1,4 @@
-loadDataInCurrentEnvironment <- function(covariates = "select", p.score = FALSE) {
+loadDataInCurrentEnvironment <- function(covariates = "select", p.score = "none") {
   callingEnv <- parent.frame(1L)
   
   if (is.character(covariates) && covariates != "full") {
@@ -21,8 +21,8 @@ loadDataInCurrentEnvironment <- function(covariates = "select", p.score = FALSE)
     x <- npci:::transform(x, trans$standardize)
     z <- ihdp$treat
     
-    if (p.score == TRUE) {
-      propFile <- file.path("data", "prop.RData")
+    if (p.score != "none") {
+      propFile <- file.path("data", paste0("prop_", p.score, ".RData"))
       if (!file.exists(propFile)) stop("propensity score file not found at path: ", propFile)
       
       load(propFile)
@@ -42,8 +42,8 @@ loadDataInCurrentEnvironment <- function(covariates = "select", p.score = FALSE)
     x <- npci:::transform(x, trans$standardize)
     z <- ihdpFull$treat
     
-    if (p.score == TRUE) {
-      propFile <- file.path("data", "propFull.RData")
+    if (p.score != "none") {
+      propFile <- file.path("data", paste0("propFull_", p.score, ".RData"))
       if (!file.exists(propFile)) stop("full propensity score file not found at path: ", propFile)
       
       load(propFile)
@@ -52,11 +52,54 @@ loadDataInCurrentEnvironment <- function(covariates = "select", p.score = FALSE)
   
   callingEnv$x <- x
   callingEnv$z <- z
-  if (p.score == TRUE)
+  if (p.score != "none")
     callingEnv$ps.z <- ps.z
 }
 
-generateDataForIterInCurrentEnvironment <- function(iter, x, z, w, overlap = TRUE, covariates = "select", setting = "A") {
+getPropensityScoreInCurrentEnvironment <- function(x, z, p.score = "none")
+{
+  getQuadraticTerms <- function(x)
+  {
+    terms <- character()
+    isBinary <- sapply(seq_len(ncol(x)), function(j) length(unique(x[,j])) == 2)
+    for (i in seq_len(ncol(x))) {
+      if (!isBinary[i]) terms[length(terms) + 1L] <- paste0("I(", colnames(x)[i], "^2)")
+      
+      if (i < ncol(x)) for (j in seq(i + 1L, ncol(x)))
+        terms[length(terms) + 1L] <- paste0(colnames(x)[i], ":", colnames(x)[j])
+    }
+    terms
+  }
+
+  callingEnv <- parent.frame(1L)
+  
+  if (p.score == "none" || p.score == "true") return(invisible(NULL))
+  
+  if (p.score == "logistic") {
+    df <- as.data.frame(x)
+    df$z <- z
+    m <- glm(z ~ ., data = df, family = binomial())
+    
+    callingEnv$ps.z <- fitted(m)
+  } else if (p.score == "bayesglm") {
+    df <- as.data.frame(x)
+    df$z <- z
+    
+    mainEffects <- colnames(x)
+    quadEffects <- getQuadraticTerms(x)
+    
+    formulaString <- paste0("z ~ ",
+                        paste0(mainEffects, collapse = " + "),
+                        " + ",
+                        paste0(quadEffects, collapse = " + "))
+
+    m <- bayesglm(formulaString, data = df, family = binomial())
+    
+    callingEnv$ps.z <- fitted(m)
+  }
+}
+
+generateDataForIterInCurrentEnvironment <- function(iter, x, z, w, overlap = TRUE, covariates = "select", setting = "A", p.score = "none") {
   getQuadraticTerms <- function(x)
   {
     terms <- character()
@@ -81,9 +124,13 @@ generateDataForIterInCurrentEnvironment <- function(iter, x, z, w, overlap = TRU
   }
   
   x.m <- if (is.data.frame(x)) dbarts::makeModelMatrixFromDataFrame(x) else x
+  if (is.integer(x.m))
+    x.m <- matrix(as.double(x.m), nrow(x.m), dimnames = dimnames(x.m))
   
   if (covariates == "junk") {
-    callingEnv$x.r <- cbind(x.m, matrix(rnorm(length(x.m)), nrow(x.m)))
+    temp <- cbind(x.m, matrix(rnorm(length(x.m)), nrow(x.m)))
+    colnames(temp) <- c(colnames(x.m), paste0("x", seq_along(colnames(x.m))))
+    callingEnv$x.r <- temp
   } else {
     callingEnv$x.r <- x.m
   }

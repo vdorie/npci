@@ -1,12 +1,17 @@
 numReps <- 250L
 
-#methods <- c("grouped", "independent", "bart")
-methods <- "bart"
+methods <- "grouped"
+#methods <- "bart"
+#methods <- "btgp"
 overlap <- c(TRUE, FALSE)
-covariates <- c("full", 50, "junk", "select", "reduced")
+#covariates <- c(50, "junk", "select", "reduced")
+covariates <- "reduced"
 settings <- c("A", "B", "C")
-p.score <- c(TRUE, FALSE)
+p.score <- c("none", "true", "logistic", "bayesglm")
 verbose <- TRUE
+
+# covariates <- "full"
+# p.score <- c("none", "true", "logistic")
 
 baseResultInterval <- matrix(c(1L, numReps), 1L, 2L,
                              dimnames = list(NULL, c("start", "end")))
@@ -32,7 +37,7 @@ for (i in seq_along(methods)) {
           
           for (n in seq_len(nrow(resultsIntervals))) {
             interval <- resultsIntervals[n,,drop = FALSE]
-            
+            #if (interval[,"start"] == 134L && covariates[k] == "reduced" && settings[l] == "B" && p.score[m] == "bayesglm") next
             Sys.setenv(START = interval[,"start"])
             Sys.setenv(END   = interval[,"end"])
             

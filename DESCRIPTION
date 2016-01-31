@@ -4,7 +4,7 @@ Date: 2015-06-27
 Title: Nonparametric Methods for Causal Inference
 Authors@R: c(person("Vincent Dorie", "Developer", role = c("aut", "cre"), email = "vjd4@nyu.edu"))
 Depends: R (>= 3.1-0)
-Imports: stats, methods, mlegp, dbarts, rstan, Rcpp
+Imports: stats, methods, mlegp, dbarts, rstan, Rcpp, tgp
 Description: Implements a variety of non-parametric models targeting various causal estimands.
 License: GPL (>= 2)
 NeedsCompilation: yes

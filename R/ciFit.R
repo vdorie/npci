@@ -26,7 +26,8 @@ ci.fit <- function(y, x, z, method, estimand, prob.z = NULL, ...) {
                  optimize.gpci.independent(m, verbose = verbose)
                   # sample.gpci.independent(m, verbose = verbose)
                  m
-               }
+               },
+               btgp = fitBTGP(y, x, z, ...)
   )
 }
 
@@ -66,6 +67,36 @@ ci.estimate <- function(y, x, z, method, estimand, prob.z = NULL, ...) {
     pred <- predict(fit, x.test, z.test, ndpost = numSamples, keeptrainfits = TRUE, summarize = FALSE)
     return((pred$train[train.ind,] - pred$test) * sign)
   
+  } else if (identical(method, "btgp")) {
+    if (identical(estimand, "ate")) {
+      train.ind <- seq_len(NROW(x))
+      x.test <- x
+      z.test <- 1 - z
+      sign <- ifelse(z == 1, 1, -1)
+      lin.comb <- 2 * z - 1
+    } else if (identical(estimand, "att")) {
+      train.ind <- which(z == 1)
+      x.test <- subset(x, z == 1)
+      z.test <- 0
+      sign <- 1
+      lin.comb <- z
+    } else if (identical(estimand, "atc")) {
+      train.ind <- which(z == 0)
+      x.test <- subset(x, z == 0)
+      z.test <- 1
+      sign <- -1
+      lin.comb <- 1 - z
+    }
+    test.ind <- NROW(x) + seq_len(NROW(x.test))
+    lin.comb <- c(lin.comb, 2 * rep_len(z.test, NROW(x.test)) - 1)
+    
+    pred <- predict(fit, x.test, z.test)
+    
+    te <- (pred$fit[train.ind] - pred$fit[test.ind]) * sign
+    se <- sqrt(crossprod(lin.comb, pred$vcov) %*% lin.comb)[1] / NROW(x.test)
+    
+    return(namedList(te, se))
+    
   } else if (identical(method, "naive1")) {
     if (identical(estimand, "ate")) {
       x.test <- rbind(x, x)
@@ -129,7 +160,9 @@ ci.estimate <- function(y, x, z, method, estimand, prob.z = NULL, ...) {
     pred <- predict(fit, x.test, z.test, "vcov", pars = fit@env$opt[[1]]$par)
     
     te <- pred$fit[z.test == 1] - pred$fit[z.test == 0]
-    se <- sqrt(crossprod(lin.comb, pred$vcov) %*% lin.comb)[1] / n
+    v <- (crossprod(lin.comb, pred$vcov) %*% lin.comb)[1]
+    if (v < 0.0) browser()
+    se <- sqrt(v) / n
     
     return(namedList(te, se, fit))
   } else if (identical(method, "independent")) {

@@ -9,10 +9,13 @@ totalNumReps <- 250L
 methods <- "grouped"
 numRepsPerProcess <- 5L
 overlap <- c(TRUE, FALSE)
-covariates <- c("full", 50, "select", "reduced", "junk")
+covariates <- c(50, "select", "reduced", "junk")
 settings <- c("A", "B", "C")
-p.score <- c(TRUE, FALSE)
+p.score <- c("none", "true", "logistic", "bayesglm")
 verbose <- TRUE
+
+# covariates <- "full
+# p.score <- c("none", "true", "logistic")
 
 if (!dir.exists("jobs")) dir.create("jobs")
 

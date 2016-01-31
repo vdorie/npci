@@ -68,10 +68,19 @@ deviance.gpci.grouped <- function(pars)
   if (methods::is(tryResult, "error")) return(.Machine$double.xmax * .Machine$double.eps^2)
   xtx <- crossprod(xr)
   
-  beta.hat <- solve(xtx, crossprod(xr, solve(object@L, object@data$y)))
+  tryResult <- tryCatch(mu.r <- solve(object@L, object@data$y), error = function(e) e)
+  if (methods::is(tryResult, "error")) return(.Machine$double.xmax * .Machine$double.eps^2)
+  
+  tryResult <- tryCatch(beta.hat <- solve(xtx, crossprod(xr, mu.r)), error = function(e) e)
+  if (methods::is(tryResult, "error")) return(.Machine$double.xmax * .Machine$double.eps^2)
+  
+  
   mu <- as.vector(object@data$x.mean %*% beta.hat)
   # (y - x beta)' L'^-1 L^-1 (y - x beta)
-  sig_y_sq.hat <- crossprod(solve(object@L, object@data$y - mu))[1] / n
+  tryResult <- tryCatch(resid.r <- solve(object@L, object@data$y - mu), error = function(e) e)
+  if (methods::is(tryResult, "error")) return(.Machine$double.xmax * .Machine$double.eps^2)
+  
+  sig_y_sq.hat <- crossprod(resid.r)[1] / n
   
   result <- n * (log(sig_y_sq.hat) + log(2 * pi)) + 2 * sum(log(diag(object@L))) + n
   attr(result, "beta")     <- beta.hat
@@ -122,6 +131,8 @@ optimize.gpci.grouped <- function(object, n.testPoints = c(50L, 15L), n.modes = 
   
   devs <- sapply(object@env$opt, function(opt) opt$value)
   object@env$opt <- object@env$opt[order(devs)]
+  
+  if (all(sapply(object@env$opt, function(x) x$value == .Machine$double.xmax * .Machine$double.eps^2))) browser()
   
   if (!identical(transform.pars, FALSE)) {
     devEnv <- environment(object@deviance)
