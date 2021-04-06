@@ -136,7 +136,7 @@ generatePlots <- function(path = ".") {
                   yValues.bart$y.hat.0, yValues.bart$y.hat.1,
                   yValues.group$y.hat.0, yValues.group$y.hat.1,
                   yValues.indep$y.hat.0, yValues.indep$y.hat.1,
-                  yValues.btgp$y.hat.0, yValues.btgp%y.hat.1)
+                  yValues.btgp$y.hat.0, yValues.btgp$y.hat.1)
   yRange <- 1.02 * (yRange - mean(yRange)) + mean(yRange)
 
   
@@ -156,7 +156,7 @@ generatePlots <- function(path = ".") {
   plotFit(y, x, z, yValues.indep, xValues, yRange, "GP-Independent")
   dev.off()
   
-  pdf(file.path(path, "toy_btgp"), 3.5, 3.5)
+  pdf(file.path(path, "toy_btgp.pdf"), 3.5, 3.5)
   plotFit(y, x, z, yValues.btgp, xValues, yRange, "BTGP")
   dev.off()
   

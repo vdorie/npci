@@ -1,3 +1,7 @@
+# Loads into calling environment:
+#  x - data.frame of confounders
+#  z - treatment vector of 0/1
+#  ps.z - optional vector of propensity score; supplied only when p.score != "none"
 loadDataInCurrentEnvironment <- function(covariates = "select", p.score = "none") {
   callingEnv <- parent.frame(1L)
   
@@ -56,6 +60,7 @@ loadDataInCurrentEnvironment <- function(covariates = "select", p.score = "none"
     callingEnv$ps.z <- ps.z
 }
 
+# Puts a propensity score estimate into the calling environment as "ps.z"
 getPropensityScoreInCurrentEnvironment <- function(x, z, p.score = "none")
 {
   getQuadraticTerms <- function(x)
@@ -99,6 +104,20 @@ getPropensityScoreInCurrentEnvironment <- function(x, z, p.score = "none")
   }
 }
 
+# Arguments:
+#  iter - simulation number
+#  x - confounder model frame
+#  z - treatment vector
+#  w - exponential offset, typically 0.5
+#  overlap - contrain the data to exhibit overlap or not
+#  covariates - one of a
+#    numeric/integer vector giving the columns to use,
+#    "select" for a pre-specified set
+#    "reduced" for a sample of 5 confounders
+#    "junk" for randomly generated ones
+#    "full" for all confounders
+#  setting - "A", "B", or "C" from the original paper
+#  p.score - not currently used
 generateDataForIterInCurrentEnvironment <- function(iter, x, z, w, overlap = TRUE, covariates = "select", setting = "A", p.score = "none") {
   getQuadraticTerms <- function(x)
   {

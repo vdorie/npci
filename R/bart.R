@@ -26,7 +26,8 @@ predict.bartSampler <- function(object, x, z, ndpost = 400L, keeptrainfits = TRU
   
   samples <- sampler$run(0L, ndpost)
   
-  testSamples <- samples$test + matrix(groupMeans[df$.z + 1], nrow(df), ndpost)
+  testSamples <- array(as.vector(samples$test) + as.vector(matrix(groupMeans[df$.z + 1], nrow(df), ndpost)),
+                       dim(samples$test))
   trainingSamples <-
     if (!identical(keeptrainfits, TRUE))
       NULL

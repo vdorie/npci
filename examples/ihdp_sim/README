@@ -8,4 +8,4 @@ If you only have a local machine,
 
 Edit either of those to change the simulations parameters. Otherwise, the simulation itself is in runJob.R.
 
-Finally, results.R can be useful in mashing together the results and loadData.R creates an "x" and "z" for the simulation setting.
+Finally, results.R can be useful in mashing together the results and data.R creates an "x" and "z" for the simulation setting.
