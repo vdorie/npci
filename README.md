@@ -1,6 +1,6 @@
 ## WARNING
 
-**This package is experimental and not supported. To fit a non-parametric model for causal inference, use [bartCause](https://github.com/vdorie/bartCause) intead.**
+**This package is experimental and not supported. To fit a non-parametric model for causal inference, use [bartCause](https://github.com/vdorie/bartCause) instead.**
 
 ## Prequisites
 
