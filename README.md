@@ -1,3 +1,13 @@
+## WARNING
+
+**This package is experimental and not supported. To fit a non-parametric model for causal inference, use [bartCause](https://github.com/vdorie/bartCause) intead.**
+
+## Prequisites
+
+[Rtools](https://cran.r-project.org/bin/windows/Rtools/) for windows. [gfortran](https://github.com/fxcoudert/gfortran-for-macOS/releases) for Mac OS.
+
+## Notes
+
 Contains R code to fit non-parmetric causal inference models. Of particular interest are the calculations in the examples folder.
 
 To run the examples, first install the package by running, from within R

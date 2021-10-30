@@ -21,12 +21,30 @@
 # endif
 #endif
 
+#include <Rversion.h>
+
+#if R_VERSION >= R_Version(3, 6, 2)
+#  define USE_FC_LEN_T
+#endif
+
+#if R_VERSION <= R_Version(3, 3, 1)
+#  define NO_C_HEADERS
+#endif
+
 #define R_NO_REMAP 1
 #include <R.h>
 #include <Rinternals.h>
 #include <Rmath.h>
 #include <R_ext/Lapack.h>
 #include <R_ext/Rdynload.h>
+
+#undef NO_C_HEADERS
+#undef R_NO_REMAP
+#undef USE_FC_LEN_T
+
+#ifndef FCONE
+# define FCONE
+#endif
 
 static SEXP squaredExponential_updateCovMatrix(SEXP covExpr, SEXP xtExpr, SEXP x_tExpr, SEXP parsExpr, SEXP sig_f_sqExpr)
 {
@@ -403,7 +421,7 @@ static SEXP updateLeftFactor(SEXP LExpr, SEXP covExpr)
   
   int lapackResult;
   
-  F77_CALL(dpotrf)(&triangleType, &i_dim, L, &i_dim, &lapackResult);
+  F77_CALL(dpotrf)(&triangleType, &i_dim, L, &i_dim, &lapackResult FCONE);
   
   if (lapackResult < 0) return Rf_ScalarInteger(EINVAL);
   if (lapackResult > 0) return Rf_ScalarInteger(EDOM);

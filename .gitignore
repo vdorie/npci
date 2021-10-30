@@ -5,3 +5,7 @@ examples/ihdp_sim/data/grouped*
 examples/ihdp_sim/data/indep*
 examples/ihdp_sim/data/compFits.RData
 *.swp
+.Rapp.history
+src/*.o
+src/*.so
+examples/toy/*.pdf
